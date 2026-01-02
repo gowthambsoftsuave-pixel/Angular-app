@@ -1,0 +1,142 @@
+<h2>Project Management</h2>
+
+<!-- Search / Get by ID -->
+<div class="controls">
+  <div class="search-box">
+    <input
+      type="text"
+      [(ngModel)]="searchId"
+      [disabled]="tableData.loading"
+      placeholder="Enter Project ID (ex: P001)"
+    />
+    <button
+      class="btn secondary"
+      (click)="getProjectById()"
+      [disabled]="tableData.loading || !searchId.trim()"
+    >
+      Get by ID
+    </button>
+  </div>
+</div>
+
+<!-- CREATE -->
+<div class="controls">
+  <h3>Create Project</h3>
+  <div class="search-box">
+    <input
+      type="text"
+      [(ngModel)]="createDto.projectName"
+      [disabled]="tableData.loading"
+      placeholder="Project Name"
+    />
+
+    <input
+      type="number"
+      [(ngModel)]="createDto.totalSprintCount"
+      [disabled]="tableData.loading"
+      placeholder="Total Sprint Count"
+    />
+
+    <input
+      type="text"
+      [(ngModel)]="createDto.createdByAdminId"
+      [disabled]="tableData.loading"
+      placeholder="Created By Admin ID"
+    />
+
+    <label class="chk">
+      <input type="checkbox" [(ngModel)]="createDto.isCompleted" [disabled]="tableData.loading" />
+      Completed
+    </label>
+
+    <button class="btn primary" (click)="createProject()" [disabled]="tableData.loading">
+      Create
+    </button>
+  </div>
+</div>
+
+<!-- UPDATE (Project details) -->
+<div class="controls">
+  <h3>Update Project</h3>
+  <div class="search-box">
+    <input
+      type="text"
+      [(ngModel)]="updateId"
+      [disabled]="tableData.loading"
+      placeholder="Project ID to update"
+      min="1"
+    />
+
+    <input
+      type="text"
+      [(ngModel)]="updateDto.projectName"
+      [disabled]="tableData.loading"
+      placeholder="Project Name"
+    />
+
+    <label class="chk">
+      <input type="checkbox" [(ngModel)]="updateDto.isCompleted" [disabled]="tableData.loading" />
+      Completed
+    </label>
+
+    <button
+      class="btn secondary"
+      (click)="updateProject()"
+      [disabled]="tableData.loading || !updateId.trim()"
+    >
+      Update
+    </button>
+  </div>
+</div>
+
+<!-- UPDATE SPRINT (special PUT) -->
+<div class="controls">
+  <h3>Update Sprint</h3>
+  <div class="search-box">
+    <input
+      type="text"
+      [(ngModel)]="sprintProjectId"
+      [disabled]="tableData.loading"
+      placeholder="Project ID (ex: P001)"
+    />
+
+    <input
+      type="number"
+      [(ngModel)]="currentSprint"
+      [disabled]="tableData.loading"
+      placeholder="Current Sprint"
+      min="1"
+    />
+
+    <button
+      class="btn secondary"
+      (click)="updateSprint()"
+      [disabled]="tableData.loading || !sprintProjectId.trim()"
+    >
+      Update Sprint
+    </button>
+  </div>
+</div>
+
+<!-- DELETE -->
+<div class="controls">
+  <h3>Delete Project</h3>
+  <div class="search-box">
+    <input
+      type="text"
+      [(ngModel)]="deleteId"
+      [disabled]="tableData.loading"
+      placeholder="Project ID to delete (ex: P001)"
+    />
+    <button
+      class="btn danger"
+      (click)="deleteProject()"
+      [disabled]="tableData.loading || !deleteId.trim()"
+    >
+      Delete
+    </button>
+  </div>
+</div>
+
+<!-- Table -->
+<app-tables [tableData]="tableData"></app-tables>

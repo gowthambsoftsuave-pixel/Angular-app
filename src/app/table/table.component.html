@@ -1,0 +1,39 @@
+<div class="tables-container">
+  <div *ngIf="tableData.title" class="table-title">
+    {{ tableData.title }}
+  </div>
+
+  <div *ngIf="tableData.loading" class="loading">
+    Loading...
+  </div>
+
+  <div *ngIf="tableData.error" class="error">
+    {{ tableData.error }}
+  </div>
+
+  <table
+    class="data-table"
+    *ngIf="!tableData.loading && !tableData.error && tableData.rows.length"
+  >
+    <thead>
+      <tr>
+        <th *ngFor="let col of tableData.columns">{{ col.header }}</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let row of tableData.rows">
+        <td *ngFor="let col of tableData.columns">
+          {{ getCellValue(row, col) }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div
+    *ngIf="!tableData.loading && !tableData.error && tableData.rows.length === 0"
+    class="no-data"
+  >
+    No data found.
+  </div>
+</div>
