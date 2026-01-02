@@ -1,0 +1,25 @@
+<h2 mat-dialog-title>Update Sprint</h2>
+
+<div mat-dialog-content>
+  <p>Current sprint: {{ minSprint }}</p>
+
+  <mat-form-field appearance="outline" style="width:100%">
+    <mat-label>New sprint</mat-label>
+    <input
+      matInput
+      type="number"
+      [(ngModel)]="newSprint"
+      [min]="minSprint" />
+  </mat-form-field>
+
+  <p style="color:#b00020" *ngIf="newSprint < minSprint">
+    Sprint cannot go backwards.
+  </p>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="newSprint < minSprint">
+    Save
+  </button>
+</div>

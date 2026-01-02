@@ -1,8 +1,13 @@
-// src/app/project/project.component.ts
 import { ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
-import { TableData } from '../table/table.component';
+import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+
+import { TableData } from '../shared/table/table.component';
 import { ProjectApiService } from '../shared/project-api.service';
-import { ProjectCreateDto, ProjectUpdateDto } from '../shared/dtos/api.dtos';
+import { ProjectDto, ProjectUpdateDto } from '../shared/dtos/api.dtos';
+
+import { ProjectEditDialogComponent } from '../shared/project-edit-dialog/project-edit-dialog.component';
+import { ProjectSprintDialogComponent } from '../shared/project-sprint-dialog/project-sprint-dialog.component';
 
 @Component({
   selector: 'app-project',
@@ -11,43 +16,29 @@ import { ProjectCreateDto, ProjectUpdateDto } from '../shared/dtos/api.dtos';
   styleUrls: ['./project.component.scss']
 })
 export class ProjectComponent implements OnInit {
-  searchId = '';
-
-  tableData: TableData<any> = {
+  tableData: TableData<ProjectDto> = {
     title: 'Projects',
     loading: false,
     error: '',
+    showActions: true,
     columns: [
-      { header: 'ID', field: 'projectId' },
+      { header: 'ID', field: 'projectId', clickable: true, clickEvent: 'view' },
       { header: 'Project', field: 'projectName' },
       { header: 'Total Sprints', field: 'totalSprintCount' },
-      { header: 'Current', field: 'currentSprintCount' },
+
+      // CLICK THIS CELL to open sprint dialog
+      { header: 'Current', field: 'currentSprintCount', clickable: true, clickEvent: 'sprint' },
+
       { header: 'Created By', field: 'createdByAdminId' },
-      {
-        header: 'Status',
-        valueFn: (p: { isCompleted: boolean }) => (p.isCompleted ? 'Completed' : 'In Progress')
-      }
+      { header: 'Status', field: 'isCompleted', valueFn: (p) => (p.isCompleted ? 'Completed' : 'In Progress') }
     ],
     rows: []
   };
 
-  createDto: ProjectCreateDto = {
-    projectName: '',
-    totalSprintCount: 1,
-    createdByAdminId: '',
-    isCompleted: false
-  };
-
-  updateId = '';
-  updateDto: ProjectUpdateDto = { projectName: '', isCompleted: false };
-
-  deleteId = '';
-
-  sprintProjectId = '';
-  currentSprint = 1;
-
   constructor(
     private api: ProjectApiService,
+    private router: Router,
+    private dialog: MatDialog,
     private zone: NgZone,
     private cdr: ChangeDetectorRef
   ) {}
@@ -63,7 +54,7 @@ export class ProjectComponent implements OnInit {
     this.api.getAll().subscribe({
       next: (data) => {
         this.zone.run(() => {
-          this.tableData = { ...this.tableData, rows: data, loading: false };
+          this.tableData = { ...this.tableData, rows: data ?? [], loading: false };
           this.cdr.detectChanges();
         });
       },
@@ -81,116 +72,68 @@ export class ProjectComponent implements OnInit {
     });
   }
 
-  getProjectById(): void {
-    const id = (this.searchId ?? '').trim();
-    if (!id) {
-      this.tableData = { ...this.tableData, error: 'Please enter a project ID' };
+  onViewProject(row: ProjectDto): void {
+    this.router.navigate(['/projects', row.projectId]);
+  }
+
+  onDeleteProject(row: ProjectDto): void {
+    this.router.navigate(['/projects/delete', row.projectId]);
+  }
+
+  onEditProject(row: ProjectDto): void {
+    const ref = this.dialog.open(ProjectEditDialogComponent, {
+      width: '420px',
+      data: { project: row }
+    });
+
+    ref.afterClosed().subscribe((dto: ProjectUpdateDto | null) => {
+      if (!dto) return;
+
+      this.tableData = { ...this.tableData, loading: true, error: '' };
       this.cdr.detectChanges();
-      return;
-    }
 
-    this.tableData = { ...this.tableData, loading: true, error: '', rows: [] };
-    this.cdr.detectChanges();
-
-    this.api.getById(id).subscribe({
-      next: (project) => {
-        this.zone.run(() => {
-          this.tableData = { ...this.tableData, rows: project ? [project] : [], loading: false };
-          this.cdr.detectChanges();
-        });
-      },
-      error: (err) => {
-        this.zone.run(() => {
-          const msg =
-            err?.status === 404
-              ? `Project "${id}" not found`
-              : `Error: ${err?.status ?? ''} ${err?.message ?? err}`;
-
-          this.tableData = { ...this.tableData, loading: false, rows: [], error: msg };
-          this.cdr.detectChanges();
-        });
-      }
+      this.api.update(row.projectId, dto).subscribe({
+        next: () => this.zone.run(() => this.getAllProjects()),
+        error: (err) => {
+          this.zone.run(() => {
+            this.tableData = { ...this.tableData, loading: false, error: err?.message ?? err };
+            this.cdr.detectChanges();
+          });
+        }
+      });
     });
   }
 
-  createProject(): void {
-    this.tableData = { ...this.tableData, loading: true, error: '' };
-    this.cdr.detectChanges();
-
-    this.api.create(this.createDto).subscribe({
-      next: () => this.zone.run(() => this.getAllProjects()),
-      error: (err) => {
-        this.zone.run(() => {
-          this.tableData = { ...this.tableData, loading: false, error: err?.message ?? err };
-          this.cdr.detectChanges();
-        });
-      }
+  onUpdateSprint(row: ProjectDto): void {
+    const ref = this.dialog.open(ProjectSprintDialogComponent, {
+      width: '420px',
+      data: { project: row }
     });
-  }
 
-  updateProject(): void {
-    const id = (this.updateId ?? '').trim();
-    if (!id) {
-      this.tableData = { ...this.tableData, error: 'Project ID required for update' };
-      this.cdr.detectChanges();
-      return;
-    }
+    ref.afterClosed().subscribe((newSprint: number | null) => {
+      if (newSprint === null || newSprint === undefined) return;
 
-    this.tableData = { ...this.tableData, loading: true, error: '' };
-    this.cdr.detectChanges();
+      const sprint = Number(newSprint);
+      if (Number.isNaN(sprint)) return;
 
-    this.api.update(id, this.updateDto).subscribe({
-      next: () => this.zone.run(() => this.getAllProjects()),
-      error: (err) => {
-        this.zone.run(() => {
-          this.tableData = { ...this.tableData, loading: false, error: err?.message ?? err };
-          this.cdr.detectChanges();
-        });
+      if (sprint < row.currentSprintCount) {
+        this.tableData = { ...this.tableData, error: 'Sprint cannot go backwards.' };
+        this.cdr.detectChanges();
+        return;
       }
-    });
-  }
 
-  updateSprint(): void {
-    const id = (this.sprintProjectId ?? '').trim();
-    if (!id) {
-      this.tableData = { ...this.tableData, error: 'Project ID required for sprint update' };
+      this.tableData = { ...this.tableData, loading: true, error: '' };
       this.cdr.detectChanges();
-      return;
-    }
 
-    this.tableData = { ...this.tableData, loading: true, error: '' };
-    this.cdr.detectChanges();
-
-    this.api.updateSprint(id, this.currentSprint).subscribe({
-      next: () => this.zone.run(() => this.getAllProjects()),
-      error: (err) => {
-        this.zone.run(() => {
-          this.tableData = { ...this.tableData, loading: false, error: err?.message ?? err };
-          this.cdr.detectChanges();
-        });
-      }
-    });
-  }
-
-  deleteProject(): void {
-    const id = (this.deleteId ?? '').trim();
-    if (!id) {
-      this.tableData = { ...this.tableData, error: 'Project ID required for delete' };
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.tableData = { ...this.tableData, loading: true, error: '' };
-    this.cdr.detectChanges();
-
-    this.api.delete(id).subscribe({
-      next: () => this.zone.run(() => this.getAllProjects()),
-      error: (err) => {
-        this.zone.run(() => {
-          this.tableData = { ...this.tableData, loading: false, error: err?.message ?? err };
-          this.cdr.detectChanges();
-        });
-      }
+      this.api.updateSprint(row.projectId, sprint).subscribe({
+        next: () => this.zone.run(() => this.getAllProjects()),
+        error: (err) => {
+          this.zone.run(() => {
+            this.tableData = { ...this.tableData, loading: false, error: err?.message ?? err };
+            this.cdr.detectChanges();
+          });
+        }
+      });
     });
   }
 }

@@ -1,34 +1,40 @@
 <h2>Persons Management</h2>
 
-<!-- Search / Get by ID -->
+<!-- Search Get by ID -->
 <div class="controls">
   <div class="search-box">
     <input
       type="text"
       [(ngModel)]="searchId"
       [disabled]="tableData.loading"
-      placeholder="Enter Person ID (ex: A001)"
-    />
+      placeholder="Enter Person ID ex A001" />
+
     <button
       class="btn secondary"
       (click)="getPersonById()"
-      [disabled]="tableData.loading || !searchId.trim()"
-    >
+      [disabled]="tableData.loading || !searchId.trim()">
       Get by ID
+    </button>
+
+    <button
+      class="btn primary"
+      (click)="getAllPersons()"
+      [disabled]="tableData.loading">
+      Get All
     </button>
   </div>
 </div>
 
-<!-- CREATE -->
+<!-- Create -->
 <div class="controls">
   <h3>Create Person</h3>
+
   <div class="search-box">
     <input
       type="text"
       [(ngModel)]="createDto.name"
       [disabled]="tableData.loading"
-      placeholder="Name"
-    />
+      placeholder="Name" />
 
     <select [(ngModel)]="createDto.role" [disabled]="tableData.loading">
       <option [ngValue]="1">Admin</option>
@@ -47,64 +53,10 @@
   </div>
 </div>
 
-<!-- UPDATE -->
-<div class="controls">
-  <h3>Update Person</h3>
-  <div class="search-box">
-    <input
-      type="text"
-      [(ngModel)]="updateId"
-      [disabled]="tableData.loading"
-      placeholder="Person ID to update (ex: A001)"
-    />
-
-    <input
-      type="text"
-      [(ngModel)]="updateDto.name"
-      [disabled]="tableData.loading"
-      placeholder="New Name"
-    />
-
-    <select [(ngModel)]="updateDto.role" [disabled]="tableData.loading">
-      <option [ngValue]="1">Admin</option>
-      <option [ngValue]="2">Manager</option>
-      <option [ngValue]="3">User</option>
-    </select>
-
-    <label class="chk">
-      <input type="checkbox" [(ngModel)]="updateDto.isActive" [disabled]="tableData.loading" />
-      Active
-    </label>
-
-    <button
-      class="btn secondary"
-      (click)="updatePerson()"
-      [disabled]="tableData.loading || !updateId.trim()"
-    >
-      Update
-    </button>
-  </div>
-</div>
-
-<!-- DELETE -->
-<div class="controls">
-  <h3>Delete Person</h3>
-  <div class="search-box">
-    <input
-      type="text"
-      [(ngModel)]="deleteId"
-      [disabled]="tableData.loading"
-      placeholder="Person ID to delete (ex: A001)"
-    />
-    <button
-      class="btn danger"
-      (click)="deletePerson()"
-      [disabled]="tableData.loading || !deleteId.trim()"
-    >
-      Delete
-    </button>
-  </div>
-</div>
-
-<!-- Table -->
-<app-tables [tableData]="tableData"></app-tables>
+<!-- Table (Update/Delete come from Actions column) -->
+<app-tables
+  [tableData]="tableData"
+  (view)="onViewPerson($event)"
+  (edit)="onEditPerson($event)"
+  (remove)="onDeletePerson($event)">
+</app-tables>

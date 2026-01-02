@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { PersonComponent } from './person/person.component';
-import { ProjectComponent } from './project/project.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/projects', pathMatch: 'full' },
-  { path: 'persons', component: PersonComponent },
-  { path: 'projects', component: ProjectComponent },
+
+  { path: 'persons', loadChildren: () => import('./person/person.module').then(m => m.PersonModule) },
+  { path: 'projects', loadChildren: () => import('./project/project.module').then(m => m.ProjectModule) },
+
   { path: '**', redirectTo: '/projects' }
 ];
 
@@ -14,4 +14,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

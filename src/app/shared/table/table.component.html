@@ -1,0 +1,55 @@
+<div class="tables-container">
+  <h3 class="table-title" *ngIf="tableData.title">{{ tableData.title }}</h3>
+
+  <div *ngIf="tableData.loading" class="loading">Loading...</div>
+  <div *ngIf="tableData.error" class="error">{{ tableData.error }}</div>
+
+  <div *ngIf="!tableData.loading && !tableData.error">
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      matSort
+      class="data-table"
+      *ngIf="dataSource.data.length > 0">
+
+      <ng-container *ngFor="let col of tableData.columns" [matColumnDef]="col.field.toString()">
+        <th
+          mat-header-cell
+          *matHeaderCellDef
+          mat-sort-header
+          [disabled]="col.sortable === false">
+          {{ col.header }}
+        </th>
+
+        <td mat-cell *matCellDef="let row">
+          <button
+            *ngIf="col.clickable; else normalCell"
+            mat-button
+            type="button"
+            (click)="onCellClick(row, col)">
+            {{ getCellValue(row, col) }}
+          </button>
+
+          <ng-template #normalCell>
+            {{ getCellValue(row, col) }}
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container *ngIf="tableData.showActions" matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let row" class="actions">
+          <button mat-stroked-button type="button" (click)="edit.emit(row)">Update</button>
+          <button mat-stroked-button color="warn" type="button" (click)="remove.emit(row)">Delete</button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+
+    <div *ngIf="dataSource.data.length === 0" class="no-data">
+      No data.
+    </div>
+  </div>
+</div>

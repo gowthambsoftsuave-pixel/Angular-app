@@ -1,0 +1,24 @@
+<h2 mat-dialog-title>Edit Person</h2>
+
+<div mat-dialog-content>
+  <mat-form-field appearance="outline" style="width:100%">
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="model.name" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" style="width:100%">
+    <mat-label>Role</mat-label>
+    <mat-select [(ngModel)]="model.role">
+      <mat-option [value]="1">Admin</mat-option>
+      <mat-option [value]="2">Manager</mat-option>
+      <mat-option [value]="3">User</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-checkbox [(ngModel)]="model.isActive">Active</mat-checkbox>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()">Save</button>
+</div>
