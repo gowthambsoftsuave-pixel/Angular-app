@@ -1,15 +1,30 @@
-.dashboard-layout {
-  display: flex;
+:host {
+  display: block;
   min-height: 100vh;
+  background: #f6f7fb;
+  color: #0f172a;
 }
 
-.sidebar-area {
-  width: 240px;
-  border-right: 1px solid #e5e5e5;
-  padding: 12px;
+.app-shell {
+  min-height: 100vh;
+  display: flex;
 }
 
-.content-area {
-  flex: 1;
-  padding: 16px;
+.sidebar {
+  width: 260px;
+  flex: 0 0 260px;
+  background: #ffffff;
+  border-right: 1px solid #e7ebf3;
+}
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;        // prevents table forcing weird stretching
+  padding: 18px;
+  background: #f6f7fb;
+}
+
+.content-inner {
+  max-width: 1200px;
+  margin: 0 auto;
 }

@@ -1,68 +1,26 @@
-.controls {
-  margin: 20px 0;
+:host { display: block; }
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px;
 }
 
-.btn {
-  padding: 10px 20px;
-  margin: 5px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+:host ::ng-deep app-tables {
+  display: block;
+  background: #ffffff;
+  border: 1px solid #e7ebf3;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
 }
 
-.btn-primary { background: #007bff; color: white; }
-.btn-info { background: #17a2b8; color: white; }
-.btn-secondary { background: #6c757d; color: white; }
-
-input {
-  padding: 10px;
-  margin: 5px;
-}
-
-.person-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.person-table th, 
-.person-table td {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: left;
-  background: white;  
-  color: black !important;  
-}
-
-.person-table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-.status-active {
-  background: #d4edda;
-  color: #155724;
-  padding: 5px 10px;
-  border-radius: 15px;
-}
-
-.status-inactive {
-  background: #f8d7da;
-  color: #721c24;
-  padding: 5px 10px;
-  border-radius: 15px;
-}
-
-.alert {
-  padding: 15px;
-  margin: 10px 0;
-  border-radius: 5px;
-}
-
-.alert-danger { background: #f8d7da; color: #721c24; }
-.alert-info { background: #d1ecf1; color: #0c5460; }
-
-.person-table td, .person-table th {
-  color: #000 !important;
-  background: white !important;
+/* material table */
+:host ::ng-deep .mat-mdc-table { width: 100%; background: transparent; }
+:host ::ng-deep .mat-mdc-header-cell { color: #475569; font-weight: 700; }
+:host ::ng-deep .mat-mdc-cell { color: #0f172a; }
+:host ::ng-deep .mat-mdc-paginator { background: transparent; }
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
 }

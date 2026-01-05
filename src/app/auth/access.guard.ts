@@ -14,11 +14,9 @@ export class AccessGuard implements CanActivate, CanActivateChild {
   constructor(private auth: AuthService, private router: Router) {}
 
   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean | UrlTree {
-    // 1) Authentication (token)
     const token = this.auth.getToken();
     if (!token) return this.router.parseUrl('/login');
 
-    // 2) Authorization (role/permissions)
     const roles = (route.data['roles'] as string[]) ?? []; // optional
     if (roles.length === 0) return true;
 

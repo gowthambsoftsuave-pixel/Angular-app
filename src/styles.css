@@ -1,4 +1,7 @@
-@import "@angular/material/prebuilt-themes/indigo-pink.css";
-.toast-success { background: #16a34a; color: #fff; }
-.toast-error { background: #dc2626; color: #fff; }
-.toast-info { background: #2563eb; color: #fff; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: Roboto, "Segoe UI", Arial, sans-serif;
+  background: #f6f7fb;   /* mild */
+  color: #0f172a;
+}

@@ -1,8 +1,4 @@
+<!-- Leave empty OR keep only content related to operations, not navigation -->
 <div class="main-content">
-  <!-- Sidebar sets active component via service -->
-  <!-- <app-project *ngIf="currentSection === 'projects'"></app-project>
-  <app-person *ngIf="currentSection === 'persons'"></app-person> -->
-  <!-- operations.component.html -->
-<button routerLink="/projects">Projects</button>
-<button routerLink="/persons">Persons</button>
+  <router-outlet></router-outlet>
 </div>

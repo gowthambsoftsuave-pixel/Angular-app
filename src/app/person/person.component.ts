@@ -8,6 +8,8 @@ import { PersonCreateDto, PersonDto, PersonUpdateDto } from '../shared/dtos/api.
 import { GenericDialogComponent, DialogField, GenericDialogData } from '../shared/generic-dialog/generic-dialog.component';
 import { ToastService } from '../shared/services/toast-service';
 
+import { AuthService } from '../auth/auth.service';
+
 @Component({
   selector: 'app-person',
   standalone: false,
@@ -21,14 +23,22 @@ export class PersonComponent implements OnInit {
     3: 'User'
   };
 
-  tableData: TableData = {
+  private readonly editRoles = ['Admin', 'Manager'];
+
+  get canEdit(): boolean {
+    return this.auth.hasAnyRole(this.editRoles);
+  }
+
+  tableData: TableData<PersonDto> = {
     title: 'Persons',
     loading: false,
     error: '',
     showActions: true,
+
     showPagination: true,
     pageSize: 5,
     pageSizeOptions: [5, 10, 20],
+
     showAdd: true,
     addLabel: 'Add Person',
 
@@ -59,37 +69,54 @@ export class PersonComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private router: Router,
     private dialog: MatDialog,
-    private toast: ToastService
+    private toast: ToastService,
+    private auth: AuthService
   ) {}
 
   ngOnInit(): void {
+    // User role => view-only (no actions + no add button)
+    this.tableData = {
+      ...this.tableData,
+      showActions: this.canEdit,
+      showAdd: this.canEdit
+    };
+    this.cdr.detectChanges();
+
     this.getAllPersons();
   }
 
-  private personFields(readonlyId: boolean): DialogField[] {
+  private personFields(readonlyId: boolean, forceReadonlyAll: boolean): DialogField[] {
     return [
-      { key: 'personId', label: 'Person ID', type: 'text', readonly: readonlyId },
-      { key: 'name', label: 'Name', type: 'text' },
+      { key: 'personId', label: 'Person ID', type: 'text', readonly: true },
+      { key: 'name', label: 'Name', type: 'text', readonly: forceReadonlyAll },
+
       {
         key: 'role',
         label: 'Role',
         type: 'select',
+        readonly: forceReadonlyAll,
         options: [
           { value: 1, label: 'Admin' },
           { value: 2, label: 'Manager' },
           { value: 3, label: 'User' }
         ]
       },
-      { key: 'isActive', label: 'Active', type: 'checkbox' }
+
+      { key: 'isActive', label: 'Active', type: 'checkbox', readonly: forceReadonlyAll }
     ];
   }
 
   onAddPerson(): void {
+    if (!this.canEdit) {
+      this.toast.error('View-only access: cannot add person');
+      return;
+    }
+
     const data: GenericDialogData = {
       title: 'Create Person',
       mode: 'create',
       model: { name: '', role: 3, isActive: true },
-      fields: this.personFields(false).filter((f) => f.key !== 'personId'),
+      fields: this.personFields(false, false).filter((f) => f.key !== 'personId'),
       onSave: (dto: any) => {
         const createDto: PersonCreateDto = {
           name: dto.name,
@@ -104,7 +131,8 @@ export class PersonComponent implements OnInit {
       }
     };
 
-    this.dialog.open(GenericDialogComponent, { width: '420px', data })
+    this.dialog
+      .open(GenericDialogComponent, { width: '420px', data })
       .afterClosed()
       .subscribe((result: any) => {
         if (result) this.zone.run(() => this.getAllPersons());
@@ -112,6 +140,15 @@ export class PersonComponent implements OnInit {
   }
 
   onViewPerson(row: PersonDto): void {
+    // User role => view dialog only (no edit)
+    if (!this.canEdit) {
+      this.dialog.open(GenericDialogComponent, {
+        width: '420px',
+        data: { person: row }
+      });
+      return;
+    }
+
     const data: GenericDialogData = {
       title: `Edit Person (${row.personId})`,
       mode: 'edit',
@@ -121,7 +158,7 @@ export class PersonComponent implements OnInit {
         role: row.role,
         isActive: row.isActive
       },
-      fields: this.personFields(true),
+      fields: this.personFields(true, false),
       onSave: (dto: any) => {
         const updateDto: PersonUpdateDto = {
           name: dto.name,
@@ -136,7 +173,8 @@ export class PersonComponent implements OnInit {
       }
     };
 
-    this.dialog.open(GenericDialogComponent, { width: '420px', data })
+    this.dialog
+      .open(GenericDialogComponent, { width: '420px', data })
       .afterClosed()
       .subscribe((result: any) => {
         if (result) this.zone.run(() => this.getAllPersons());
@@ -144,10 +182,18 @@ export class PersonComponent implements OnInit {
   }
 
   onEditPerson(row: PersonDto): void {
+    if (!this.canEdit) {
+      this.toast.error('View-only access: cannot edit person');
+      return;
+    }
     this.onViewPerson(row);
   }
 
   onDeletePerson(row: PersonDto): void {
+    if (!this.canEdit) {
+      this.toast.error('View-only access: cannot delete person');
+      return;
+    }
     this.router.navigate(['/persons/delete', row.personId]);
   }
 
@@ -165,8 +211,13 @@ export class PersonComponent implements OnInit {
       error: (err) => {
         this.zone.run(() => {
           const msg = err?.message ?? err;
-          this.toast.error('Projects: ' + msg);
-          this.tableData = { ...this.tableData, loading: false, rows: [], error: 'API call failed: ' + msg };
+          this.toast.error('Persons: ' + msg);
+          this.tableData = {
+            ...this.tableData,
+            loading: false,
+            rows: [],
+            error: 'API call failed: ' + msg
+          };
           this.cdr.detectChanges();
         });
       }

@@ -1,7 +1,9 @@
-<app-tables
-  [tableData]="tableData"
-  (add)="onAddPerson()"
-  (view)="onViewPerson($event)"
-  (edit)="onEditPerson($event)"
-  (remove)="onDeletePerson($event)">
-</app-tables>
+<div class="'page">
+  <app-tables
+    [tableData]="tableData"
+    (add)="onAddPerson()"
+    (view)="onViewPerson($event)"
+    (edit)="onEditPerson($event)"
+    (remove)="onDeletePerson($event)">
+  </app-tables>
+</div>

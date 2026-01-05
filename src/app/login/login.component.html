@@ -1,27 +1,46 @@
-<div class="login-container">
-  <h2>Login</h2>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-head">
+      <h1 class="title">Project Management</h1>
+      <p class="subtitle">Sign in to continue</p>
+    </div>
 
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label>Username</label>
-      <input type="text" formControlName="username" />
-        <small class="error"
-            *ngIf="form.controls['username']?.touched && form.controls['username']?.invalid">Username is required
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" autocomplete="on">
+      <div class="field">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          placeholder="Enter username"
+        />
+        <small class="val" *ngIf="form.get('username')?.touched && form.get('username')?.invalid">
+          Username is required.
         </small>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="Enter password"
+        />
+        <small class="val" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">
+          Password is required.
+        </small>
+      </div>
+
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <button class="btn" type="submit" [disabled]="form.invalid || loading">
+        {{ loading ? 'Signing in...' : 'Login' }}
+      </button>
+    </form>
+
+    <div class="hint">
+      <span>Tip:</span> Use your assigned credentials.
     </div>
-
-    <div class="field">
-      <label>Password</label>
-      <input type="password" formControlName="password" />
-      <small class="error"
-       *ngIf="form.controls['password']?.touched && form.controls['password']?.invalid">Password is required
-      </small>
-    </div>
-
-    <button type="submit" [disabled]="loading">
-      {{ loading ? 'Logging in...' : 'Login' }}
-    </button>
-
-    <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
-  </form>
+  </div>
 </div>

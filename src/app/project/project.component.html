@@ -1,8 +1,10 @@
-<app-tables
-  [tableData]="tableData"
-  (add)="onAddProject()"
-  (view)="onViewProject($event)"
-  (edit)="onEditProject($event)"
-  (remove)="onDeleteProject($event)"
-  (sprint)="onUpdateSprint($event)">
-</app-tables>
+<div class="'page">
+  <app-tables
+    [tableData]="tableData"
+    (add)="onAddProject()"
+    (view)="onViewProject($event)"
+    (edit)="onEditProject($event)"
+    (remove)="onDeleteProject($event)"
+    (sprint)="onUpdateSprint($event)">
+  </app-tables>
+</div>
