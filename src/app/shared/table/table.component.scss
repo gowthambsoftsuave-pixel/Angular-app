@@ -1,20 +1,79 @@
 .tables-container {
-  margin-top: 20px;
+  margin-top: 18px;
+}
+
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+/* NEW: left group for + button + title */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* NEW: + button */
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  background: #ffffff;
+
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.10);
+}
+
+.add-btn mat-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  line-height: 20px;
+}
+
+/* NEW: text shows only on hover */
+.add-text {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 180ms ease, opacity 180ms ease;
+
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.add-btn:hover .add-text {
+  max-width: 140px;
+  opacity: 1;
 }
 
 .table-title {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: #0f172a;
 }
 
+/* ---- Table shell ---- */
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
-  border-radius: 12px;
+  background: #ffffff;
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 10px 35px rgba(2, 6, 23, 0.10),
+    0 2px 8px rgba(2, 6, 23, 0.06);
 
   th,
   td {
@@ -23,20 +82,30 @@
   }
 
   th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 18px 16px;
-    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #fff;
+    padding: 16px 14px;
+    font-weight: 700;
     white-space: nowrap;
   }
 
   td {
-    padding: 14px 16px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 14px 14px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    color: #0f172a;
   }
 
+
   tbody tr:hover {
-    background: #f8f9ff;
+    background: #f6f7ff;
+  }
+
+  tbody tr:active {
+    transform: scale(0.998);
   }
 }
 
@@ -47,14 +116,14 @@
   padding: 0;
   cursor: pointer;
 
-  color: #3b5bdb;
-  font-weight: 700;
+  color: #1d4ed8;
+  font-weight: 800;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
 .cell-link:hover {
-  color: #2f4ac7;
+  color: #1e40af;
 }
 
 .actions {
@@ -64,65 +133,61 @@
 .actions .btn {
   padding: 8px 12px;
   margin: 0 6px;
-  border: 0;
-  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 800;
   color: #fff;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.10);
+  transition: transform 140ms ease, filter 140ms ease, opacity 140ms ease;
+}
+
+.actions .btn:hover {
+  filter: brightness(1.03);
+  transform: translateY(-1px);
+}
+
+.actions .btn:active {
+  transform: translateY(0);
 }
 
 .actions .btn:disabled {
   opacity: 0.65;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .actions .btn.btn-secondary {
-  background: #64748b;
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
 }
 
 .actions .btn.btn-danger {
-  background: #dc2626;
-}
-
-.status {
-  display: inline-block;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-weight: 600;
-  text-align: center;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.status.completed {
-  background: #d4edda;
-  color: #155724;
-}
-
-.status.active {
-  background: #cce5ff;
-  color: #004085;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
 }
 
 .loading,
 .error,
 .no-data {
-  padding: 3rem;
+  padding: 2.25rem;
   text-align: center;
-  border-radius: 12px;
-  margin: 2rem 0;
+  border-radius: 14px;
+  margin: 14px 0;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  box-shadow: 0 10px 35px rgba(2, 6, 23, 0.06);
 }
 
 .loading {
-  background: #e3f2fd;
-  color: #1976d2;
+  color: #2563eb;
 }
 
 .error {
-  background: #ffebee;
-  color: #c62828;
+  color: #b91c1c;
+  background: #fff1f2;
+  border-color: rgba(185, 28, 28, 0.18);
 }
 
 .no-data {
-  color: #666;
+  color: #64748b;
   font-style: italic;
 }

@@ -1,61 +1,6 @@
-<h2>Persons Management</h2>
-
-<!-- Search Get by ID -->
-<div class="controls">
-  <div class="search-box">
-    <input
-      type="text"
-      [(ngModel)]="searchId"
-      [disabled]="tableData.loading"
-      placeholder="Enter Person ID ex A001" />
-
-    <button
-      class="btn secondary"
-      (click)="getPersonById()"
-      [disabled]="tableData.loading || !searchId.trim()">
-      Get by ID
-    </button>
-
-    <button
-      class="btn primary"
-      (click)="getAllPersons()"
-      [disabled]="tableData.loading">
-      Get All
-    </button>
-  </div>
-</div>
-
-<!-- Create -->
-<div class="controls">
-  <h3>Create Person</h3>
-
-  <div class="search-box">
-    <input
-      type="text"
-      [(ngModel)]="createDto.name"
-      [disabled]="tableData.loading"
-      placeholder="Name" />
-
-    <select [(ngModel)]="createDto.role" [disabled]="tableData.loading">
-      <option [ngValue]="1">Admin</option>
-      <option [ngValue]="2">Manager</option>
-      <option [ngValue]="3">User</option>
-    </select>
-
-    <label class="chk">
-      <input type="checkbox" [(ngModel)]="createDto.isActive" [disabled]="tableData.loading" />
-      Active
-    </label>
-
-    <button class="btn primary" (click)="createPerson()" [disabled]="tableData.loading">
-      Create
-    </button>
-  </div>
-</div>
-
-<!-- Table (Update/Delete come from Actions column) -->
 <app-tables
   [tableData]="tableData"
+  (add)="onAddPerson()"
   (view)="onViewPerson($event)"
   (edit)="onEditPerson($event)"
   (remove)="onDeletePerson($event)">

@@ -8,6 +8,7 @@ import {
   OnChanges,
   SimpleChanges
 } from '@angular/core';
+
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 
@@ -17,8 +18,6 @@ export interface TableColumn<T = any> {
   valueFn?: (row: T) => any;
   clickable?: boolean;
   sortable?: boolean;
-
-  // NEW: decide what happens when this cell is clicked
   clickEvent?: 'view' | 'sprint';
 }
 
@@ -28,7 +27,12 @@ export interface TableData<T = any> {
   rows: T[];
   loading: boolean;
   error: string;
+
   showActions?: boolean;
+
+  // NEW: Add button (POST)
+  showAdd?: boolean;
+  addLabel?: string;
 }
 
 @Component({
@@ -43,9 +47,10 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit {
   @Output() view = new EventEmitter<T>();
   @Output() edit = new EventEmitter<T>();
   @Output() remove = new EventEmitter<T>();
-
-  // NEW: for sprint update click
   @Output() sprint = new EventEmitter<T>();
+
+  // NEW
+  @Output() add = new EventEmitter<void>();
 
   @ViewChild(MatSort) sort!: MatSort;
 
@@ -55,13 +60,13 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit {
   ngOnChanges(changes: SimpleChanges): void {
     if (!this.tableData) return;
 
-    const colKeys = (this.tableData.columns ?? []).map(c => c.field.toString());
+    const colKeys = (this.tableData.columns ?? []).map((c) => c.field.toString());
     this.displayedColumns = this.tableData.showActions ? [...colKeys, 'actions'] : colKeys;
 
     this.dataSource.data = this.tableData.rows ?? [];
 
     this.dataSource.sortingDataAccessor = (row: any, columnId: string) => {
-      const col = (this.tableData.columns ?? []).find(c => c.field.toString() === columnId);
+      const col = (this.tableData.columns ?? []).find((c) => c.field.toString() === columnId);
       if (!col) return '';
 
       const path = (col.field ?? '').toString();
@@ -70,7 +75,6 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit {
         : undefined;
 
       if (fieldValue !== undefined && fieldValue !== null) return fieldValue;
-
       return col.valueFn ? col.valueFn(row) : '';
     };
 
@@ -96,5 +100,9 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit {
     const ev = col.clickEvent ?? 'view';
     if (ev === 'view') this.view.emit(row);
     if (ev === 'sprint') this.sprint.emit(row);
+  }
+
+  onAddClick(): void {
+    this.add.emit();
   }
 }

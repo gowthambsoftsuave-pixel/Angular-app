@@ -4,14 +4,12 @@ import { FormsModule } from '@angular/forms';
 
 import { MaterialModule } from './material.module';
 import { TableComponent } from './table/table.component';
-import { ProjectEditDialogComponent } from '../shared/project-edit-dialog/project-edit-dialog.component';
-import { PersonEditDialogComponent } from './person-edit-dialog/person-edit-dialog.component';
+import { GenericDialogComponent } from './generic-dialog/generic-dialog.component';
 
 @NgModule({
   declarations: [
     TableComponent,
-    ProjectEditDialogComponent,
-    PersonEditDialogComponent
+    GenericDialogComponent
   ],
   imports: [
     CommonModule,
@@ -20,9 +18,8 @@ import { PersonEditDialogComponent } from './person-edit-dialog/person-edit-dial
   ],
   exports: [
     TableComponent,
-    ProjectEditDialogComponent,
-    MaterialModule,
-    PersonEditDialogComponent
+    GenericDialogComponent,
+    MaterialModule
   ]
 })
 export class SharedModule {}

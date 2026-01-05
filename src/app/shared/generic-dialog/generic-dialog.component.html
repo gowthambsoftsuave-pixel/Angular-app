@@ -1,0 +1,63 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+
+<div mat-dialog-content>
+  <div class="fields">
+    <ng-container *ngFor="let f of data.fields">
+      <!-- Text / Number -->
+      <mat-form-field
+        appearance="outline"
+        style="width: 100%"
+        *ngIf="f.type === 'text' || f.type === 'number'">
+        <mat-label>{{ f.label }}</mat-label>
+
+        <input
+          matInput
+          [type]="f.type"
+          [(ngModel)]="dto[f.key]"
+          [readonly]="isReadOnly(f)"
+          [attr.min]="f.type === 'number' ? f.min : null"
+          [attr.max]="f.type === 'number' ? f.max : null"
+          [attr.step]="f.type === 'number' ? (f.step ?? 1) : null" />
+      </mat-form-field>
+
+      <!-- Select -->
+      <mat-form-field
+        appearance="outline"
+        style="width: 100%"
+        *ngIf="f.type === 'select'">
+        <mat-label>{{ f.label }}</mat-label>
+
+        <mat-select [(ngModel)]="dto[f.key]" [disabled]="isReadOnly(f)">
+          <mat-option *ngFor="let opt of (f.options ?? [])" [value]="opt.value">
+            {{ opt.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Checkbox -->
+      <mat-checkbox
+        *ngIf="f.type === 'checkbox'"
+        [(ngModel)]="dto[f.key]"
+        [disabled]="isReadOnly(f)">
+        {{ f.label }}
+      </mat-checkbox>
+    </ng-container>
+
+    <div class="validation-error" *ngIf="errorMsg">
+      {{ errorMsg }}
+    </div>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Close</button>
+
+  <button
+    mat-raised-button
+    color="primary"
+    type="button"
+    (click)="save()"
+    [disabled]="data.mode === 'view'">
+    Save
+  </button>
+</div>

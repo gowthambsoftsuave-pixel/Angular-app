@@ -16,7 +16,7 @@ export interface PersonCreateDto {
 
 export interface PersonUpdateDto {
   name: string;        
-  role: number;        
+  role: number;     
   isActive?: boolean;
 }
 

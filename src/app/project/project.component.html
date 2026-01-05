@@ -1,11 +1,6 @@
-<div class="controls">
-  <button class="btn primary" (click)="getAllProjects()" [disabled]="tableData.loading">
-    Refresh
-  </button>
-</div>
-
 <app-tables
   [tableData]="tableData"
+  (add)="onAddProject()"
   (view)="onViewProject($event)"
   (edit)="onEditProject($event)"
   (remove)="onDeleteProject($event)"

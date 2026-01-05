@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { TableData } from '../shared/table/table.component';
 import { PersonApiService } from '../shared/person-api.service';
 import { PersonCreateDto, PersonDto, PersonUpdateDto } from '../shared/dtos/api.dtos';
-import { PersonEditDialogComponent } from '../shared/person-edit-dialog/person-edit-dialog.component';
+import { GenericDialogComponent, DialogField, GenericDialogData } from '../shared/generic-dialog/generic-dialog.component';
 
 @Component({
   selector: 'app-person',
@@ -14,30 +14,42 @@ import { PersonEditDialogComponent } from '../shared/person-edit-dialog/person-e
   styleUrls: ['./person.component.scss']
 })
 export class PersonComponent implements OnInit {
-  searchId = '';
-
   private readonly roleNames: Record<number, string> = {
     1: 'Admin',
     2: 'Manager',
     3: 'User'
   };
 
-  tableData: TableData<PersonDto> = {
+  tableData: TableData = {
     title: 'Persons',
     loading: false,
     error: '',
     showActions: true,
+
+    // IMPORTANT: this makes the + button render (if you updated TableComponent)
+    showAdd: true,
+    addLabel: 'Add Person',
+
     columns: [
-      { header: 'ID', field: 'personId', clickable: true }, // click -> view details
-      { header: 'Name', field: 'name' },
-      { header: 'Role', field: 'role', valueFn: (p) => this.roleNames[p.role] ?? `Role ${p.role}` },
-      { header: 'Status', field: 'isActive', valueFn: (p) => (p.isActive ? 'Active' : 'Inactive') }
+      { header: 'ID', field: 'personId', clickable: true, clickEvent: 'view' },
+      { header: 'Name', field: 'name', clickable: true, clickEvent: 'view' },
+      {
+        header: 'Role',
+        field: 'role',
+        clickable: true,
+        clickEvent: 'view',
+        valueFn: (p: any) => this.roleNames[p.role] ?? `Role ${p.role}`
+      },
+      {
+        header: 'Status',
+        field: 'isActive',
+        clickable: true,
+        clickEvent: 'view',
+        valueFn: (p: any) => (p.isActive ? 'Active' : 'Inactive')
+      }
     ],
     rows: []
   };
-
-  // Keep this only if you still want the "Create" section in the HTML
-  createDto: PersonCreateDto = { name: '', role: 3, isActive: true };
 
   constructor(
     private api: PersonApiService,
@@ -51,36 +63,91 @@ export class PersonComponent implements OnInit {
     this.getAllPersons();
   }
 
+  private personFields(readonlyId: boolean): DialogField[] {
+    return [
+      { key: 'personId', label: 'Person ID', type: 'text', readonly: readonlyId },
+      { key: 'name', label: 'Name', type: 'text' },
+      {
+        key: 'role',
+        label: 'Role',
+        type: 'select',
+        options: [
+          { value: 1, label: 'Admin' },
+          { value: 2, label: 'Manager' },
+          { value: 3, label: 'User' }
+        ]
+      },
+      { key: 'isActive', label: 'Active', type: 'checkbox' }
+    ];
+  }
+
+  // NEW: + button handler (POST)
+  onAddPerson(): void {
+    const data: GenericDialogData = {
+      title: 'Create Person',
+      mode: 'create',
+      model: { name: '', role: 3, isActive: true },
+      fields: this.personFields(false).filter((f) => f.key !== 'personId'),
+      onSave: (dto: any) => {
+        const createDto: PersonCreateDto = {
+          name: dto.name,
+          role: Number(dto.role),
+          isActive: !!dto.isActive
+        };
+
+        this.tableData = { ...this.tableData, loading: true, error: '' };
+        this.cdr.detectChanges();
+
+        return this.api.create(createDto);
+      }
+    };
+
+    this.dialog.open(GenericDialogComponent, { width: '420px', data })
+      .afterClosed()
+      .subscribe((result: any) => {
+        if (result) this.zone.run(() => this.getAllPersons());
+      });
+  }
+
+  // Existing: edit dialog
   onViewPerson(row: PersonDto): void {
-    this.router.navigate(['/persons', row.personId]);
+    const data: GenericDialogData = {
+      title: `Edit Person (${row.personId})`,
+      mode: 'edit',
+      model: {
+        personId: row.personId,
+        name: row.name,
+        role: row.role,
+        isActive: row.isActive
+      },
+      fields: this.personFields(true),
+      onSave: (dto: any) => {
+        const updateDto: PersonUpdateDto = {
+          name: dto.name,
+          role: Number(dto.role),
+          isActive: !!dto.isActive
+        };
+
+        this.tableData = { ...this.tableData, loading: true, error: '' };
+        this.cdr.detectChanges();
+
+        return this.api.update(row.personId, updateDto);
+      }
+    };
+
+    this.dialog.open(GenericDialogComponent, { width: '420px', data })
+      .afterClosed()
+      .subscribe((result: any) => {
+        if (result) this.zone.run(() => this.getAllPersons());
+      });
+  }
+
+  onEditPerson(row: PersonDto): void {
+    this.onViewPerson(row);
   }
 
   onDeletePerson(row: PersonDto): void {
     this.router.navigate(['/persons/delete', row.personId]);
-  }
-
-  onEditPerson(row: PersonDto): void {
-    const ref = this.dialog.open(PersonEditDialogComponent, {
-      width: '420px',
-      data: { person: row }
-    });
-
-    ref.afterClosed().subscribe((dto: PersonUpdateDto | null) => {
-      if (!dto) return;
-
-      this.tableData = { ...this.tableData, loading: true, error: '' };
-      this.cdr.detectChanges();
-
-      this.api.update(row.personId, dto).subscribe({
-        next: () => this.zone.run(() => this.getAllPersons()),
-        error: (err) => {
-          this.zone.run(() => {
-            this.tableData = { ...this.tableData, loading: false, error: err?.message ?? err };
-            this.cdr.detectChanges();
-          });
-        }
-      });
-    });
   }
 
   getAllPersons(): void {
@@ -88,13 +155,13 @@ export class PersonComponent implements OnInit {
     this.cdr.detectChanges();
 
     this.api.getAll().subscribe({
-      next: (data) => {
+      next: (data: any) => {
         this.zone.run(() => {
           this.tableData = { ...this.tableData, rows: data ?? [], loading: false };
           this.cdr.detectChanges();
         });
       },
-      error: (err) => {
+      error: (err: any) => {
         this.zone.run(() => {
           this.tableData = {
             ...this.tableData,
@@ -102,53 +169,6 @@ export class PersonComponent implements OnInit {
             rows: [],
             error: 'API call failed: ' + (err?.message ?? err)
           };
-          this.cdr.detectChanges();
-        });
-      }
-    });
-  }
-
-  getPersonById(): void {
-    const id = (this.searchId ?? '').trim();
-    if (!id) {
-      this.tableData = { ...this.tableData, error: 'Please enter a person ID' };
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.tableData = { ...this.tableData, loading: true, error: '', rows: [] };
-    this.cdr.detectChanges();
-
-    this.api.getById(id).subscribe({
-      next: (person) => {
-        this.zone.run(() => {
-          this.tableData = { ...this.tableData, rows: person ? [person] : [], loading: false };
-          this.cdr.detectChanges();
-        });
-      },
-      error: (err) => {
-        this.zone.run(() => {
-          const msg =
-            err?.status === 404
-              ? `Person "${id}" not found`
-              : `Error: ${err?.status ?? ''} ${err?.message ?? err}`;
-          this.tableData = { ...this.tableData, loading: false, rows: [], error: msg };
-          this.cdr.detectChanges();
-        });
-      }
-    });
-  }
-
-  // Optional: keep only if your UI still has the "Create" section
-  createPerson(): void {
-    this.tableData = { ...this.tableData, loading: true, error: '' };
-    this.cdr.detectChanges();
-
-    this.api.create(this.createDto).subscribe({
-      next: () => this.zone.run(() => this.getAllPersons()),
-      error: (err) => {
-        this.zone.run(() => {
-          this.tableData = { ...this.tableData, loading: false, error: err?.message ?? err };
           this.cdr.detectChanges();
         });
       }
