@@ -25,8 +25,9 @@ export class PersonComponent implements OnInit {
     loading: false,
     error: '',
     showActions: true,
-
-    // IMPORTANT: this makes the + button render (if you updated TableComponent)
+    showPagination: true,
+    pageSize: 5,
+    pageSizeOptions: [5, 10, 20],
     showAdd: true,
     addLabel: 'Add Person',
 
@@ -81,7 +82,6 @@ export class PersonComponent implements OnInit {
     ];
   }
 
-  // NEW: + button handler (POST)
   onAddPerson(): void {
     const data: GenericDialogData = {
       title: 'Create Person',
@@ -109,7 +109,6 @@ export class PersonComponent implements OnInit {
       });
   }
 
-  // Existing: edit dialog
   onViewPerson(row: PersonDto): void {
     const data: GenericDialogData = {
       title: `Edit Person (${row.personId})`,

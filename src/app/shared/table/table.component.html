@@ -1,5 +1,4 @@
 <div class="tables-container">
-  <!-- Header (Title + Add button) -->
   <div class="table-header">
     <div class="header-left">
       <button
@@ -8,7 +7,7 @@
         type="button"
         (click)="onAddClick()"
         aria-label="Add">
-        <mat-icon>add</mat-icon>
+        <mat-icon>+</mat-icon>
         <span class="add-text">{{ tableData.addLabel ?? 'Add' }}</span>
       </button>
 
@@ -56,6 +55,13 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
   </table>
+  <mat-paginator
+    *ngIf="tableData.showPagination !== false && !tableData.loading && !tableData.error && dataSource.data.length > 0"
+    [pageSize]="tableData.pageSize ?? 5"
+    [pageSizeOptions]="tableData.pageSizeOptions ?? [5, 10, 20]"
+    showFirstLastButtons>
+  </mat-paginator>
+
 
   <div
     class="no-data"

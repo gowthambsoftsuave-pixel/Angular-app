@@ -20,10 +20,12 @@ export class ProjectComponent implements OnInit {
     loading: false,
     error: '',
     showActions: true,
-
-    // NEW: show + button
     showAdd: true,
     addLabel: 'Add Project',
+    showPagination: true,
+    pageSize: 5,
+    pageSizeOptions: [5, 10, 20],
+
 
     columns: [
       { header: 'ID', field: 'projectId', clickable: true, clickEvent: 'view' },
