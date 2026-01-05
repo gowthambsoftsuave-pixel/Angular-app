@@ -3,10 +3,16 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 import { TableData } from '../shared/table/table.component';
-import { ProjectApiService } from '../shared/project-api.service';
+import { ProjectApiService } from '../shared/services/project-api.service';
 import { ProjectCreateDto, ProjectDto, ProjectUpdateDto } from '../shared/dtos/api.dtos';
-import { GenericDialogComponent, DialogField, GenericDialogData } from '../shared/generic-dialog/generic-dialog.component';
+import {
+  GenericDialogComponent,
+  DialogField,
+  GenericDialogData
+} from '../shared/generic-dialog/generic-dialog.component';
+import { ToastService } from '../shared/services/toast-service';
 
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-project',
@@ -15,17 +21,38 @@ import { GenericDialogComponent, DialogField, GenericDialogData } from '../share
   styleUrls: ['./project.component.scss']
 })
 export class ProjectComponent implements OnInit {
+
+  private readonly adminRoles = ['Admin']; // change if your role name is "Administrator"
+
+  get canCreateProject(): boolean {
+    return this.auth.hasAnyRole(this.adminRoles);
+  }
+
+  get canDeleteProject(): boolean {
+    return this.auth.hasAnyRole(this.adminRoles);
+  }
+
+  // Optional: if managers should NOT edit/update sprint, keep Admin only.
+  // If managers ARE allowed, change these to include 'Manager'.
+  get canEditProject(): boolean {
+    return this.auth.hasAnyRole(this.adminRoles);
+  }
+
+  get canUpdateSprint(): boolean {
+    return this.auth.hasAnyRole(this.adminRoles);
+  }
+
   tableData: TableData<ProjectDto> = {
     title: 'Projects',
     loading: false,
     error: '',
     showActions: true,
-    showAdd: true,
+    showAdd: true, // will be overwritten in ngOnInit
     addLabel: 'Add Project',
+
     showPagination: true,
     pageSize: 5,
     pageSizeOptions: [5, 10, 20],
-
 
     columns: [
       { header: 'ID', field: 'projectId', clickable: true, clickEvent: 'view' },
@@ -33,7 +60,13 @@ export class ProjectComponent implements OnInit {
       { header: 'Total Sprints', field: 'totalSprintCount', clickable: true, clickEvent: 'view' },
       { header: 'Current', field: 'currentSprintCount', clickable: true, clickEvent: 'sprint' },
       { header: 'Created By', field: 'createdByAdminId', clickable: true, clickEvent: 'view' },
-      { header: 'Status', field: 'isCompleted', clickable: true, clickEvent: 'view', valueFn: (p) => (p.isCompleted ? 'Completed' : 'In Progress') }
+      {
+        header: 'Status',
+        field: 'isCompleted',
+        clickable: true,
+        clickEvent: 'view',
+        valueFn: (p) => (p.isCompleted ? 'Completed' : 'In Progress')
+      }
     ],
     rows: []
   };
@@ -43,10 +76,16 @@ export class ProjectComponent implements OnInit {
     private zone: NgZone,
     private cdr: ChangeDetectorRef,
     private router: Router,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private toast: ToastService,
+    private auth: AuthService
   ) {}
 
   ngOnInit(): void {
+    // Hide Add button for non-admin
+    this.tableData = { ...this.tableData, showAdd: this.canCreateProject };
+    this.cdr.detectChanges();
+
     this.getAllProjects();
   }
 
@@ -61,7 +100,33 @@ export class ProjectComponent implements OnInit {
     ];
   }
 
+  private handleDialogClose(result: any, successMsg: string): void {
+    if (!result) {
+      this.tableData = { ...this.tableData, loading: false };
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (result.__error) {
+      this.toast.error(result.message ?? 'Save failed');
+      this.tableData = { ...this.tableData, loading: false };
+      this.cdr.detectChanges();
+
+      this.router.navigate(['/projects']).then(() => this.getAllProjects());
+      return;
+    }
+
+    this.toast.success(successMsg);
+    this.getAllProjects();
+  }
+
   onAddProject(): void {
+    // Hard-block create even if user somehow triggers it
+    if (!this.canCreateProject) {
+      this.toast.error('Only Admin can create projects');
+      return;
+    }
+
     const data: GenericDialogData = {
       title: 'Create Project',
       mode: 'create',
@@ -92,12 +157,20 @@ export class ProjectComponent implements OnInit {
       }
     };
 
-    this.dialog.open(GenericDialogComponent, { width: '500px', data }).afterClosed().subscribe((result) => {
-      if (result) this.zone.run(() => this.getAllProjects());
-    });
+    this.dialog
+      .open(GenericDialogComponent, { width: '500px', data })
+      .afterClosed()
+      .subscribe((result) =>
+        this.zone.run(() => this.handleDialogClose(result, 'Project created'))
+      );
   }
 
   onViewProject(row: ProjectDto): void {
+    if (!this.canEditProject) {
+      this.toast.error('Only Admin can edit projects');
+      return;
+    }
+
     const data: GenericDialogData = {
       title: `Edit Project (${row.projectId})`,
       mode: 'edit',
@@ -123,9 +196,12 @@ export class ProjectComponent implements OnInit {
       }
     };
 
-    this.dialog.open(GenericDialogComponent, { width: '500px', data }).afterClosed().subscribe((result) => {
-      if (result) this.zone.run(() => this.getAllProjects());
-    });
+    this.dialog
+      .open(GenericDialogComponent, { width: '500px', data })
+      .afterClosed()
+      .subscribe((result) =>
+        this.zone.run(() => this.handleDialogClose(result, 'Project updated'))
+      );
   }
 
   onEditProject(row: ProjectDto): void {
@@ -133,47 +209,58 @@ export class ProjectComponent implements OnInit {
   }
 
   onDeleteProject(row: ProjectDto): void {
+    if (!this.canDeleteProject) {
+      this.toast.error('Only Admin can delete projects');
+      return;
+    }
+
     this.router.navigate(['/projects/delete', row.projectId]);
   }
 
   onUpdateSprint(row: ProjectDto): void {
-  const data: GenericDialogData = {
-    title: `Update Sprint (${row.projectId})`,
-    mode: 'edit',
-    model: {
-      currentSprint: row.currentSprintCount
-    },
-    fields: [
-      {
-        key: 'currentSprint',
-        label: 'Current Sprint',
-        type: 'number',
-        min: row.currentSprintCount,        
-        max: row.totalSprintCount,          
-        step: 1
-      }
-    ],
-    validate: (dto) => {
-      const s = Number(dto.currentSprint);
-      if (Number.isNaN(s)) return 'Enter a valid number';
-      if (s < row.currentSprintCount) return 'Sprint cannot go backwards';
-      if (s > row.totalSprintCount) return `Max sprint is ${row.totalSprintCount}`;
-      return null;
-    },
-    onSave: (dto) => {
-      const sprint = Number(dto.currentSprint);
-      return this.api.updateSprint(row.projectId, sprint);
+    if (!this.canUpdateSprint) {
+      this.toast.error('Only Admin can update sprint');
+      return;
     }
-  };
 
-  this.dialog
-    .open(GenericDialogComponent, { width: '420px', data })
-    .afterClosed()
-    .subscribe((result) => {
-      if (result) this.zone.run(() => this.getAllProjects());
-    });
-}
+    const data: GenericDialogData = {
+      title: `Update Sprint (${row.projectId})`,
+      mode: 'edit',
+      model: { currentSprint: row.currentSprintCount },
+      fields: [
+        {
+          key: 'currentSprint',
+          label: 'Current Sprint',
+          type: 'number',
+          min: 0,
+          max: row.totalSprintCount,
+          step: 1
+        }
+      ],
+      validate: (dto) => {
+        const s = Number(dto.currentSprint);
 
+        if (Number.isNaN(s)) return 'Enter a valid number';
+        if (s < 0) return 'Sprint cannot be negative';
+        if (s < row.currentSprintCount) return 'Sprint cannot go backwards';
+        if (s > row.totalSprintCount) return `Max sprint is ${row.totalSprintCount}`;
+        return null;
+      },
+      onSave: (dto) => {
+        const sprint = Number(dto.currentSprint);
+        this.tableData = { ...this.tableData, loading: true, error: '' };
+        this.cdr.detectChanges();
+        return this.api.updateSprint(row.projectId, sprint);
+      }
+    };
+
+    this.dialog
+      .open(GenericDialogComponent, { width: '420px', data })
+      .afterClosed()
+      .subscribe((result) =>
+        this.zone.run(() => this.handleDialogClose(result, 'Sprint updated'))
+      );
+  }
 
   getAllProjects(): void {
     this.tableData = { ...this.tableData, loading: true, error: '', rows: [] };
@@ -188,11 +275,13 @@ export class ProjectComponent implements OnInit {
       },
       error: (err) => {
         this.zone.run(() => {
+          const msg = err?.message ?? err;
+          this.toast.error('Projects: ' + msg);
           this.tableData = {
             ...this.tableData,
             loading: false,
             rows: [],
-            error: 'API call failed: ' + (err?.message ?? err)
+            error: 'API call failed: ' + msg
           };
           this.cdr.detectChanges();
         });

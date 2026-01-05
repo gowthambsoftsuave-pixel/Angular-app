@@ -57,45 +57,53 @@ export class GenericDialogComponent {
   }
 
     save(): void {
-        this.errorMsg = '';
+  this.errorMsg = '';
 
-        if (this.data.mode === 'view') {
-            this.dialogRef.close(null);
-            return;
+  if (this.data.mode === 'view') {
+    this.dialogRef.close(null);
+    return;
+  }
+
+  const payload = { ...this.dto };
+
+  try {
+    const r = this.data.onSave?.(payload);
+
+    if (r && typeof r.subscribe === 'function') {
+      r.subscribe({
+        next: () => this.dialogRef.close(payload),
+        error: (err: any) => {
+          const msg =
+            err?.error?.message ??
+            err?.error ??
+            err?.message ??
+            'Save failed';
+
+          this.errorMsg = msg;
+
+          // IMPORTANT: tell parent it was an API error
+          this.dialogRef.close({ __error: true, message: msg });
         }
-
-        const payload = { ...this.dto };
-
-        if (this.data.validate) {
-            const msg = this.data.validate(payload);
-            if (msg) {
-            this.errorMsg = msg;
-            return;
-            }
-        }
-
-        try {
-            const r = this.data.onSave?.(payload);
-
-            if (r && typeof r.subscribe === 'function') {
-            r.subscribe({
-                next: () => this.dialogRef.close(payload),
-                error: (err: any) => (this.errorMsg = err?.message ?? 'Save failed')
-            });
-            return;
-            }
-
-            if (r && typeof r.then === 'function') {
-            r.then(() => this.dialogRef.close(payload)).catch((err: any) => {
-                this.errorMsg = err?.message ?? 'Save failed';
-            });
-            return;
-            }
-
-            this.dialogRef.close(payload);
-        } catch (e: any) {
-            this.errorMsg = e?.message ?? 'Save failed';
-        }
+      });
+      return;
     }
+
+    if (r && typeof r.then === 'function') {
+      r.then(() => this.dialogRef.close(payload)).catch((err: any) => {
+        const msg = err?.message ?? 'Save failed';
+        this.errorMsg = msg;
+        this.dialogRef.close({ __error: true, message: msg });
+      });
+      return;
+    }
+
+    this.dialogRef.close(payload);
+  } catch (e: any) {
+    const msg = e?.message ?? 'Save failed';
+    this.errorMsg = msg;
+    this.dialogRef.close({ __error: true, message: msg });
+  }
+}
+
 
 }

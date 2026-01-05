@@ -1,19 +1,57 @@
 import { NgModule } from '@angular/core';
+
 import { BrowserModule, provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+
+import {
+  provideHttpClient,
+  withFetch,
+  withInterceptorsFromDi,
+  HTTP_INTERCEPTORS
+} from '@angular/common/http';
+
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppRoutingModule } from './app-routing-module';
+
 import { App } from './app';
+
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { OperationsComponent } from './operations/operations.component';
 
+import { LoginComponent } from './login/login.component';
+import { AuthInterceptor } from './auth/auth.interceptor';
+import { DashboardComponent } from './dashboard/dashboard.component';
+
 @NgModule({
-  declarations: [App, SidebarComponent, OperationsComponent],
-  imports: [BrowserModule, BrowserAnimationsModule, CommonModule, FormsModule, AppRoutingModule],
-  providers: [provideClientHydration(withEventReplay()), provideHttpClient(withFetch())],
+  declarations: [
+    App,
+    SidebarComponent,
+    OperationsComponent,
+    LoginComponent,
+    DashboardComponent
+  ],
+
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    AppRoutingModule
+  ],
+
+  providers: [
+    provideClientHydration(withEventReplay()),
+
+    provideHttpClient(withFetch(), withInterceptorsFromDi()),
+
+    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
+  ],
+
   bootstrap: [App]
 })
 export class AppModule { }

@@ -3,9 +3,10 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 import { TableData } from '../shared/table/table.component';
-import { PersonApiService } from '../shared/person-api.service';
+import { PersonApiService } from '../shared/services/person-api.service';
 import { PersonCreateDto, PersonDto, PersonUpdateDto } from '../shared/dtos/api.dtos';
 import { GenericDialogComponent, DialogField, GenericDialogData } from '../shared/generic-dialog/generic-dialog.component';
+import { ToastService } from '../shared/services/toast-service';
 
 @Component({
   selector: 'app-person',
@@ -57,7 +58,8 @@ export class PersonComponent implements OnInit {
     private zone: NgZone,
     private cdr: ChangeDetectorRef,
     private router: Router,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private toast: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -160,14 +162,11 @@ export class PersonComponent implements OnInit {
           this.cdr.detectChanges();
         });
       },
-      error: (err: any) => {
+      error: (err) => {
         this.zone.run(() => {
-          this.tableData = {
-            ...this.tableData,
-            loading: false,
-            rows: [],
-            error: 'API call failed: ' + (err?.message ?? err)
-          };
+          const msg = err?.message ?? err;
+          this.toast.error('Projects: ' + msg);
+          this.tableData = { ...this.tableData, loading: false, rows: [], error: 'API call failed: ' + msg };
           this.cdr.detectChanges();
         });
       }

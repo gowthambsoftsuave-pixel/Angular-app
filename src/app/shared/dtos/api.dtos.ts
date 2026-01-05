@@ -45,3 +45,30 @@ export interface ProjectUpdateDto {
   projectName?: string;
   isCompleted?: boolean;
 }
+
+export interface TaskDto{
+  TaskId?: string;
+  TaskName?: string;
+  ProjectId?: string;
+  AssignedToPerson?: string;
+  SprintNumber?: number;
+  Status?: number;
+}
+
+export interface TaskUpdateDto{
+  Status?:number;
+}
+
+export interface TaskResponseDto{
+  TaskId?:string;
+  TaskName?: string;
+  ProjectId?:string;
+}
+
+export interface TaskCreateDto{
+  Taskname?:string;
+  ProjectId?:string;
+  AssignedToPerson?:string;
+  SprintNumber?:number;
+  Status?:number;
+}

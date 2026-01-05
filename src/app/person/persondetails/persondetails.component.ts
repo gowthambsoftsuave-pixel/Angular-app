@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { PersonApiService} from '../../shared/person-api.service';
+import { PersonApiService} from '../../shared/services/person-api.service';
 import { TableData } from '../../shared/table/table.component';
 
 @Component({

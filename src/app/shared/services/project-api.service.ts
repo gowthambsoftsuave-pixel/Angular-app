@@ -1,9 +1,8 @@
-// src/app/shared/project-api.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE } from './api.config';
-import { ProjectCreateDto, ProjectDto, ProjectUpdateDto } from './dtos/api.dtos';
+import { API_BASE } from '../api.config';
+import { ProjectCreateDto, ProjectDto, ProjectUpdateDto } from '../dtos/api.dtos';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectApiService {
@@ -24,12 +23,10 @@ export class ProjectApiService {
   }
 
   update(id: string, dto: ProjectUpdateDto): Observable<string> {
-    // Controller returns Ok("Updated Succssfully") [file:52]
     return this.http.put(`${this.baseUrl}/${id}`, dto, { responseType: 'text' });
   }
 
   updateSprint(id: string, currentSprint: number): Observable<string> {
-    // PUT: /api/Project/{id}/sprint?currentSprint=5 [file:52]
     const params = new HttpParams().set('currentSprint', currentSprint);
     return this.http.put(`${this.baseUrl}/${id}/sprint`, null, { params, responseType: 'text' });
   }

@@ -1,17 +1,26 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-sidebar',
-  standalone : false,
+  standalone: false,
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent {
+  constructor(private router: Router, private auth: AuthService) {}
+
   goToPersons() {
-    console.log('Go to Persons');
+    this.router.navigateByUrl('/dashboard/persons');
   }
 
   goToProjects() {
-    console.log('Go to Projects');
+    this.router.navigateByUrl('/dashboard/projects');
+  }
+
+  logout() {
+    this.auth.logout();
+    this.router.navigateByUrl('/login');
   }
 }

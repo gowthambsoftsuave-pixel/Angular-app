@@ -2,8 +2,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { API_BASE } from './api.config';
-import { PersonCreateDto, PersonDto, PersonTeamResponseDto, PersonUpdateDto } from './dtos/api.dtos';
+import { API_BASE } from '../api.config';
+import { PersonCreateDto, PersonDto, PersonTeamResponseDto, PersonUpdateDto } from '../dtos/api.dtos';
 @Injectable({ providedIn: 'root' })
 export class PersonApiService {
   private readonly baseUrl = `${API_BASE}/Person`;
@@ -23,7 +23,6 @@ export class PersonApiService {
   }
 
   update(id: string, dto: PersonUpdateDto): Observable<string> {
-    // Controller returns Ok("Updated Successfully") [file:53]
     return this.http.put(`${this.baseUrl}/${id}`, dto, { responseType: 'text' });
   }
 

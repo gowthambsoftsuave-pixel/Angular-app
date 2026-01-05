@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { TableData } from '../../shared/table/table.component';
-import { ProjectApiService } from '../../shared/project-api.service';
+import { ProjectApiService } from '../../shared/services/project-api.service';
 
 @Component({
   selector: 'app-project-details',

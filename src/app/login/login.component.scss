@@ -1,0 +1,5 @@
+.login-container { max-width: 360px; margin: 40px auto; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
+.field { margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+input { padding: 8px; }
+button { padding: 10px; width: 100%; }
+.error { color: #c00; }

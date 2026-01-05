@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { ProjectApiService } from '../../shared/project-api.service';
+import { ProjectApiService } from '../../shared/services/project-api.service';
 
 @Component({
   selector: 'app-project-delete',
