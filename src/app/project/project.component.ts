@@ -134,20 +134,17 @@ export class ProjectComponent implements OnInit {
         projectName: '',
         totalSprintCount: 1,
         createdByAdminId: '',
-        isCompleted: false
       },
       fields: [
         { key: 'projectName', label: 'Project Name', type: 'text' },
         { key: 'totalSprintCount', label: 'Total Sprints', type: 'number' },
         { key: 'createdByAdminId', label: 'Created By Admin ID', type: 'text' },
-        { key: 'isCompleted', label: 'Completed', type: 'checkbox' }
       ],
       onSave: (dto) => {
         const createDto: ProjectCreateDto = {
           projectName: dto.projectName,
           totalSprintCount: Number(dto.totalSprintCount),
           createdByAdminId: dto.createdByAdminId,
-          isCompleted: !!dto.isCompleted
         };
 
         this.tableData = { ...this.tableData, loading: true, error: '' };

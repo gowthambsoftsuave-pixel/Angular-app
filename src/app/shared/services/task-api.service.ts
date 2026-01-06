@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@angular/core";
+import { Injectable } from "@angular/core";
 import { HttpClient,HttpParams,HttpHeaders } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { API_BASE } from "../api.config";
@@ -20,5 +20,19 @@ export class TaskApiService{
 
     create(dto: TaskCreateDto): Observable<TaskDto>{
         return this.http.post<TaskDto>(this.baseUrl,dto);
+    }
+
+    updateStatus (taskId:string,userId:string,dto:TaskUpdateDto): Observable<TaskResponseDto>{
+        const url = `${this.baseUrl}/${taskId}/status`;
+        return this.http.put(url,dto,{params:{userId}});
+    }
+
+    reassignTask (taskId:string,userId:string,newPersonId:string):Observable<TaskResponseDto>{
+        const url = `${this.baseUrl}/${taskId}/reassign`;
+        return this.http.put(url,null,{params:{userId,newPersonId}})
+    }
+
+    deleteTask(taskId:string):Observable<string>{
+        return this.http.delete(`${this.baseUrl}/${taskId}`,{responseType:'text'})
     }
 }

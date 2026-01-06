@@ -18,7 +18,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing-module';
 
 import { App } from './app';
-
+import {ToastrModule} from 'ngx-toastr';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { OperationsComponent } from './operations/operations.component';
 
@@ -41,13 +41,20 @@ import { DashboardComponent } from './dashboard/dashboard.component';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    AppRoutingModule
+    AppRoutingModule,
+    ToastrModule.forRoot({
+      positionClass: 'toast-bottom-right',
+      timeOut: 3000,
+      closeButton: true,
+      progressBar: true
+    })
   ],
 
   providers: [
     provideClientHydration(withEventReplay()),
 
     provideHttpClient(withFetch(), withInterceptorsFromDi()),
+    
 
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }
   ],

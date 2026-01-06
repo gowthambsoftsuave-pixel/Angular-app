@@ -22,7 +22,6 @@ const routes: Routes = [
   { path: 'projects/:id', redirectTo: 'dashboard/projects/:id' },
   { path: 'projects', redirectTo: 'dashboard/projects', pathMatch: 'full' },
 
-  // Protected layout + children
   {
     path: 'dashboard',
     component: DashboardComponent,

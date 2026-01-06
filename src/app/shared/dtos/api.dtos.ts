@@ -38,7 +38,6 @@ export interface ProjectCreateDto {
   projectName: string;
   totalSprintCount: number;     
   createdByAdminId: string;
-  isCompleted?: boolean;
 }
 
 export interface ProjectUpdateDto {
