@@ -1,0 +1,24 @@
+<mat-toolbar class="app-toolbar">
+  <div class="left">
+    <span class="app-title">ProjectManagement</span>
+  </div>
+
+  <div class="center">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search modules</mat-label>
+      <input
+        matInput
+        type="text"
+        [(ngModel)]="q"
+        placeholder="projects, persons, tasks..."
+        (keydown.enter)="onSearchEnter()" />
+      <button mat-icon-button matSuffix type="button" (click)="onSearchEnter()">
+        <mat-icon></mat-icon>
+      </button>
+    </mat-form-field>
+  </div>
+
+  <div class="right">
+    <button mat-stroked-button type="button" (click)="logout()">Logout</button>
+  </div>
+</mat-toolbar>

@@ -16,12 +16,16 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppRoutingModule } from './app-routing-module';
-
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 import { App } from './app';
 import {ToastrModule} from 'ngx-toastr';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { OperationsComponent } from './operations/operations.component';
-
+import { HeaderComponent } from './header/header.component';
 import { LoginComponent } from './login/login.component';
 import { AuthInterceptor } from './auth/auth.interceptor';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -32,7 +36,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
     SidebarComponent,
     OperationsComponent,
     LoginComponent,
-    DashboardComponent
+    DashboardComponent,HeaderComponent
   ],
 
   imports: [
@@ -40,6 +44,11 @@ import { DashboardComponent } from './dashboard/dashboard.component';
     BrowserAnimationsModule,
     CommonModule,
     FormsModule,
+    MatToolbarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatButtonModule,
     ReactiveFormsModule,
     AppRoutingModule,
     ToastrModule.forRoot({

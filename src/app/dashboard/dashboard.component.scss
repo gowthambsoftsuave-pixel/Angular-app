@@ -1,30 +1,35 @@
-:host {
-  display: block;
-  min-height: 100vh;
-  background: #f6f7fb;
-  color: #0f172a;
-}
-
 .app-shell {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
 }
 
-.sidebar {
-  width: 260px;
-  flex: 0 0 260px;
-  background: #ffffff;
-  border-right: 1px solid #e7ebf3;
+/* Top blue header */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-.content {
+/* Below header: sidebar + page content */
+.app-body {
+  display: flex;
   flex: 1 1 auto;
-  min-width: 0;        // prevents table forcing weird stretching
-  padding: 18px;
-  background: #f6f7fb;
+  min-height: 0; /* important so child can scroll */
 }
 
-.content-inner {
-  max-width: 1200px;
-  margin: 0 auto;
+/* Left navbar */
+.app-sidebar {
+  width: 220px;
+  flex: 0 0 220px;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+}
+
+/* Right content */
+.app-content {
+  flex: 1 1 auto;
+  padding: 16px 24px;
+  overflow: auto;
+  background: #f6f7fb; /* light page background like sample */
 }

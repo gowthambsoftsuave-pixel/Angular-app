@@ -22,10 +22,4 @@ export class SidebarComponent {
   goToTasks() {
     this.router.navigateByUrl('/dashboard/tasks');
   }
-
-
-  logout() {
-    this.auth.logout();
-    this.router.navigateByUrl('/login');
-  }
 }

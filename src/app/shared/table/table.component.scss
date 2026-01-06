@@ -99,7 +99,6 @@
     color: #0f172a;
   }
 
-
   tbody tr:hover {
     background: #f6f7ff;
   }
@@ -191,3 +190,34 @@
   color: #64748b;
   font-style: italic;
 }
+
+.paginator-footer {
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 0;
+}
+
+.paginator-footer mat-paginator {
+  width: 100%;
+  max-width: 900px;
+}
+
+:host ::ng-deep .mat-mdc-paginator .mat-mdc-paginator-container {
+  justify-content: center;
+  text-align: center;
+}
+
+:host ::ng-deep .mat-mdc-paginator .mat-mdc-paginator-page-size {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:host ::ng-deep .mat-mdc-paginator .mat-mdc-paginator-page-size-label {
+  margin-right: 8px;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
