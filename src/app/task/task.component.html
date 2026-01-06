@@ -1,1 +1,6 @@
-<p>task.component works!</p>
+<app-tables
+  [tableData]="tableData"
+  (view)="onRowClick($event)"
+  (add)="onAddTask()"
+  (remove)="onDeleteTask($event)">
+</app-tables>

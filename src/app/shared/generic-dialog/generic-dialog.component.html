@@ -7,7 +7,7 @@
       <mat-form-field
         appearance="outline"
         style="width: 100%"
-        *ngIf="f.type === 'text' || f.type === 'number'">
+        *ngIf="(f.type === 'text' || f.type === 'number') && showField(f)">
         <mat-label>{{ f.label }}</mat-label>
 
         <input
@@ -24,7 +24,7 @@
       <mat-form-field
         appearance="outline"
         style="width: 100%"
-        *ngIf="f.type === 'select'">
+        *ngIf="f.type === 'select' && showField(f)">
         <mat-label>{{ f.label }}</mat-label>
 
         <mat-select [(ngModel)]="dto[f.key]" [disabled]="isReadOnly(f)">
@@ -36,7 +36,7 @@
 
       <!-- Checkbox -->
       <mat-checkbox
-        *ngIf="f.type === 'checkbox'"
+        *ngIf="f.type === 'checkbox' && showField(f)"
         [(ngModel)]="dto[f.key]"
         [disabled]="isReadOnly(f)">
         {{ f.label }}

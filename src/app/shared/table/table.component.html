@@ -13,6 +13,19 @@
 
       <h3 class="table-title">{{ tableData.title ?? '' }}</h3>
     </div>
+
+    <!-- NEW: right side toolbar in header row -->
+    <div class="header-right" *ngIf="!tableData.loading && !tableData.error">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search</mat-label>
+        <input
+          matInput
+          type="text"
+          placeholder="Search by any field..."
+          [(ngModel)]="searchText"
+          (ngModelChange)="applySearch()" />
+      </mat-form-field>
+    </div>
   </div>
 
   <div *ngIf="tableData.loading" class="loading">Loading...</div>
@@ -55,13 +68,14 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
   </table>
+
   <mat-paginator
     *ngIf="tableData.showPagination !== false && !tableData.loading && !tableData.error && dataSource.data.length > 0"
     [pageSize]="tableData.pageSize ?? 5"
     [pageSizeOptions]="tableData.pageSizeOptions ?? [5, 10, 20]"
+    (page)="onPaginatorChange($event)"
     showFirstLastButtons>
   </mat-paginator>
-
 
   <div
     class="no-data"

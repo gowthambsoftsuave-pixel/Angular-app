@@ -19,6 +19,11 @@ export class SidebarComponent {
     this.router.navigateByUrl('/dashboard/projects');
   }
 
+  goToTasks() {
+    this.router.navigateByUrl('/dashboard/tasks');
+  }
+
+
   logout() {
     this.auth.logout();
     this.router.navigateByUrl('/login');

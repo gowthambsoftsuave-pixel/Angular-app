@@ -14,7 +14,7 @@ import { Subscription } from 'rxjs';
 
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort, Sort } from '@angular/material/sort';
-import { MatPaginator } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 
 export interface TableColumn<T = any> {
   header: string;
@@ -37,9 +37,9 @@ export interface TableData<T = any> {
   showAdd?: boolean;
   addLabel?: string;
 
-  showPagination?: boolean;     // default true
-  pageSize?: number;            // default 5
-  pageSizeOptions?: number[];   // default [5,10,20]
+  showPagination?: boolean;
+  pageSize?: number;
+  pageSizeOptions?: number[];
 }
 
 @Component({
@@ -57,6 +57,9 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
   @Output() sprint = new EventEmitter<T>();
   @Output() add = new EventEmitter<void>();
 
+  // Search UI state (belongs to component, not TableData interface)
+  searchText: string = '';
+
   dataSource = new MatTableDataSource<T>([]);
   displayedColumns: string[] = [];
 
@@ -65,7 +68,8 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
 
   private sortSub?: Subscription;
 
-  // Works safely with *ngIf (can be null during destroy/recreate)
+  private pageSizeState = 5;
+
   @ViewChild(MatSort) set sortRef(s: MatSort | null) {
     if (!s) return;
     if (this._sort === s) return;
@@ -73,7 +77,6 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
     this._sort = s;
     this.dataSource.sort = s;
 
-    // only one subscription
     this.sortSub?.unsubscribe();
     this.sortSub = s.sortChange.subscribe((_ev: Sort) => {
       this._paginator?.firstPage();
@@ -87,6 +90,7 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
 
     if (this.tableData?.showPagination !== false) {
       this.dataSource.paginator = p;
+      this.initPaginatorState();
       this.applyPaginatorConfig();
     }
   }
@@ -97,9 +101,10 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
     const colKeys = (this.tableData.columns ?? []).map((c) => c.field.toString());
     this.displayedColumns = this.tableData.showActions ? [...colKeys, 'actions'] : colKeys;
 
+    // Set data
     this.dataSource.data = this.tableData.rows ?? [];
 
-    // Sorting accessor (nested fields + valueFn + numeric strings)
+    // Sorting accessor (your existing logic)
     this.dataSource.sortingDataAccessor = (row: any, columnId: string) => {
       const col = (this.tableData.columns ?? []).find((c) => c.field.toString() === columnId);
       if (!col) return '';
@@ -110,11 +115,8 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
         ? path.split('.').reduce((acc: any, k: string) => (acc ? acc[k] : undefined), row)
         : undefined;
 
-      if (value === undefined || value === null) {
-        value = col.valueFn ? col.valueFn(row) : '';
-      }
+      if (value === undefined || value === null) value = col.valueFn ? col.valueFn(row) : '';
 
-      // numeric sort fix
       if (typeof value === 'string') {
         const trimmed = value.trim();
         if (trimmed !== '' && !Number.isNaN(Number(trimmed))) return Number(trimmed);
@@ -124,27 +126,62 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
       return value;
     };
 
-    // reattach sort/paginator after async data load
+    // ✅ Search across ALL columns (Material way)
+    this.dataSource.filterPredicate = (row: any, filter: string) => {
+      const q = (filter ?? '').toString().trim().toLowerCase();
+      if (!q) return true;
+
+      const text = (this.tableData.columns ?? [])
+        .map((c) => {
+          const v = this.getCellValue(row, c);
+          return (v ?? '').toString().toLowerCase();
+        })
+        .join(' | ');
+
+      return text.includes(q);
+    };
+
+    // Re-apply search when new rows come
+    this.applySearch();
+
     if (this._sort) this.dataSource.sort = this._sort;
 
     if (this._paginator && this.tableData.showPagination !== false) {
       this.dataSource.paginator = this._paginator;
+      this.initPaginatorState();
       this.applyPaginatorConfig();
-      this._paginator.firstPage();
     }
   }
 
-  ngAfterViewInit(): void {
-    // setters already attach sort/paginator
-  }
+  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
     this.sortSub?.unsubscribe();
   }
 
+  private initPaginatorState(): void {
+    const incoming = this.tableData?.pageSize ?? 5;
+    if (this.pageSizeState !== incoming && this._paginator?.pageSize === 5 && incoming !== 5) {
+      this.pageSizeState = incoming;
+    }
+  }
+
   private applyPaginatorConfig(): void {
     if (!this._paginator) return;
-    this._paginator.pageSize = this.tableData?.pageSize ?? 5;
+
+    const options = this.tableData?.pageSizeOptions ?? [5, 10, 20];
+    if (!options.includes(this.pageSizeState)) this.pageSizeState = options[0] ?? 5;
+
+    this._paginator.pageSizeOptions = options;
+    this._paginator.pageSize = this.pageSizeState;
+  }
+
+  onPaginatorChange(ev: PageEvent): void {
+    this.pageSizeState = ev.pageSize;
+
+    if (this.tableData) {
+      this.tableData = { ...this.tableData, pageSize: ev.pageSize };
+    }
   }
 
   getCellValue(row: any, col: TableColumn<T>) {
@@ -154,6 +191,14 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
     if (!path) return '';
 
     return path.split('.').reduce((acc: any, k: string) => (acc ? acc[k] : undefined), row) ?? '';
+  }
+
+  // Called from the search input (ngModelChange)
+  applySearch(): void {
+    this.dataSource.filter = (this.searchText ?? '').toString().trim().toLowerCase();
+
+    // If paginator exists, reset to first page after filter (common UX)
+    this._paginator?.firstPage();
   }
 
   onCellClick(row: T, col: TableColumn<T>): void {
