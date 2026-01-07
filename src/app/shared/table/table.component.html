@@ -14,7 +14,7 @@
       <h3 class="table-title">{{ tableData.title ?? '' }}</h3>
     </div>
 
-    <div class="header-right" *ngIf="!tableData.error">
+    <div class="header-right" *ngIf="!tableData.loading && !tableData.error">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Search</mat-label>
         <input
@@ -35,7 +35,7 @@
     mat-table
     [dataSource]="dataSource"
     matSort
-    *ngIf="!tableData.error">
+    *ngIf="!tableData.loading && !tableData.error">
 
     <ng-container *ngFor="let col of tableData.columns" [matColumnDef]="col.field.toString()">
       <th mat-header-cell *matHeaderCellDef mat-sort-header [disabled]="col.sortable === false">
@@ -82,15 +82,13 @@
 
   <div
     class="paginator-footer"
-    *ngIf="tableData.showPagination !== false &&  !tableData.error &&(resultsLength>0|| dataSource.data.length > 0)">
+    *ngIf="tableData.showPagination !== false && !tableData.loading && !tableData.error && dataSource.data.length > 0">
     <mat-paginator
-      [length]="resultsLength"
-      [pageSize]="tableData.pageSize ?? 10"
+      [pageSize]="tableData.pageSize ?? 5"
       [pageSizeOptions]="tableData.pageSizeOptions ?? [5, 10, 20]"
       (page)="onPaginatorChange($event)"
       showFirstLastButtons>
     </mat-paginator>
-
   </div>
 
   <div

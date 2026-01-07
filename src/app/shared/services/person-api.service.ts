@@ -1,10 +1,9 @@
 // src/app/shared/person-api.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE } from '../api.config';
-import { PersonCreateDto, PersonDto, PersonTeamResponseDto, PersonUpdateDto,PersonPagedResponseDto } from '../dtos/api.dtos';
-
+import { PersonCreateDto, PersonDto, PersonTeamResponseDto, PersonUpdateDto } from '../dtos/api.dtos';
 @Injectable({ providedIn: 'root' })
 export class PersonApiService {
   private readonly baseUrl = `${API_BASE}/Person`;
@@ -32,12 +31,8 @@ export class PersonApiService {
   }
 
   getTeamDetails(projectTeamId: string, requesterId: string): Observable<PersonTeamResponseDto> {
+    // Controller expects requesterId in header [file:53]
     const headers = new HttpHeaders({ requesterId });
     return this.http.get<PersonTeamResponseDto>(`${this.baseUrl}/team/${projectTeamId}`, { headers });
-  }
-
-  getPersonsPaged(params:HttpParams):Observable<PersonPagedResponseDto>{
-    return this.http.get<PersonPagedResponseDto>(`${this.baseUrl}/paged`,{
-      params });
   }
 }
