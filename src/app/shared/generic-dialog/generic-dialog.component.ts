@@ -38,6 +38,7 @@ export interface GenericDialogData {
 export class GenericDialogComponent {
   dto: any = {};
   errorMsg = '';
+  uniqueId= '';
 
   constructor(
     private dialogRef: MatDialogRef<GenericDialogComponent>,

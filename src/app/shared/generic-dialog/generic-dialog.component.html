@@ -4,12 +4,14 @@
   <div class="fields">
     <ng-container *ngFor="let f of data.fields">
       <!-- Text / Number -->
+      <!-- Text/Number field -->
       <mat-form-field
+        [id]="'field-' + uniqueId + '-' + f.key"
+        [attr.data-unique]="'text-' + uniqueId + '-' + f.key"
         appearance="outline"
         style="width: 100%"
         *ngIf="(f.type === 'text' || f.type === 'number') && showField(f)">
         <mat-label>{{ f.label }}</mat-label>
-
         <input
           matInput
           [type]="f.type"
@@ -20,19 +22,21 @@
           [attr.step]="f.type === 'number' ? (f.step ?? 1) : null" />
       </mat-form-field>
 
-      <!-- Select -->
+      <!-- Select field -->
       <mat-form-field
+        [id]="'select-' + uniqueId + '-' + f.key"
+        [attr.data-unique]="'select-' + uniqueId + '-' + f.key"
         appearance="outline"
         style="width: 100%"
         *ngIf="f.type === 'select' && showField(f)">
         <mat-label>{{ f.label }}</mat-label>
-
         <mat-select [(ngModel)]="dto[f.key]" [disabled]="isReadOnly(f)">
           <mat-option *ngFor="let opt of (f.options ?? [])" [value]="opt.value">
             {{ opt.label }}
           </mat-option>
         </mat-select>
       </mat-form-field>
+
 
       <!-- Checkbox -->
       <mat-checkbox
