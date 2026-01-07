@@ -73,3 +73,9 @@ export interface TaskResponseDto{
   ProjectId?:string;
 }
 
+export interface PersonPagedResponseDto {
+  data: PersonDto[];
+  pageNumber: number;
+  pageSize: number;
+  totalRecords: number;
+}
