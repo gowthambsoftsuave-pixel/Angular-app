@@ -1,10 +1,12 @@
-<div class="'page">
-  <app-tables
-    [tableData]="tableData"
-    (add)="onAddProject()"
-    (view)="onViewProject($event)"
-    (edit)="onEditProject($event)"
-    (remove)="onDeleteProject($event)"
-    (sprint)="onUpdateSprint($event)">
+<div class="content">
+  <div class="actions-header" *ngIf="canCreateProject">
+    <button mat-raised-button color="accent" (click)="onBulkCreate()">
+      Bulk Create Projects
+    </button>
+  </div>
+
+  <app-tables [tableData]="tableData" (add)="onAddProject()" (view)="onViewProject($event)"
+    (edit)="onEditProject($event)" (remove)="onDeleteProject($event)" (sprint)="onUpdateSprint($event)"
+    (pageChange)="handlePage($event)" (sortChange)="handleSort($event)" (searchChange)="handleSearch($event)">
   </app-tables>
 </div>

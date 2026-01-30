@@ -1,6 +1,12 @@
-<app-tables
-  [tableData]="tableData"
-  (view)="onRowClick($event)"
-  (add)="onAddTask()"
-  (remove)="onDeleteTask($event)">
-</app-tables>
+<div class="content">
+  <div class="actions-header" *ngIf="this.auth.hasAnyRole(this.managerRoles)">
+    <button mat-raised-button color="accent" (click)="onBulkCreate()">
+      Bulk Create Tasks
+    </button>
+  </div>
+
+  <app-tables [tableData]="tableData" (add)="onAddTask()" (view)="onRowClick($event)" (edit)="onRowClick($event)"
+    (remove)="onDeleteTask($event)" (pageChange)="handlePage($event)" (sortChange)="handleSort($event)"
+    (searchChange)="handleSearch($event)">
+  </app-tables>
+</div>

@@ -1,10 +1,11 @@
 import { ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { throwError } from 'rxjs';
 
 import { TableData } from '../shared/table/table.component';
 import { PersonApiService } from '../shared/services/person-api.service';
-import { PersonCreateDto, PersonDto, PersonUpdateDto } from '../shared/dtos/api.dtos';
+import { PagedRequest, PersonCreateDto, PersonDto, PersonUpdateDto } from '../shared/dtos/api.dtos';
 import { GenericDialogComponent, DialogField, GenericDialogData } from '../shared/generic-dialog/generic-dialog.component';
 import { ToastService } from '../shared/services/toast-service';
 
@@ -42,6 +43,10 @@ export class PersonComponent implements OnInit {
     showAdd: true,
     addLabel: 'Add Person',
 
+    serverSide: true,
+    totalRecords: 0,
+    pageNumber: 1,
+
     columns: [
       { header: 'ID', field: 'personId', clickable: true, clickEvent: 'view' },
       { header: 'Name', field: 'name', clickable: true, clickEvent: 'view' },
@@ -63,6 +68,10 @@ export class PersonComponent implements OnInit {
     rows: []
   };
 
+  private currentSearch = '';
+  private currentSortBy = '';
+  private currentSortDir: 'asc' | 'desc' = 'asc';
+
   constructor(
     private api: PersonApiService,
     private zone: NgZone,
@@ -71,7 +80,7 @@ export class PersonComponent implements OnInit {
     private dialog: MatDialog,
     private toast: ToastService,
     private auth: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // User role => view-only (no actions + no add button)
@@ -82,6 +91,25 @@ export class PersonComponent implements OnInit {
     };
     this.cdr.detectChanges();
 
+    this.getAllPersons();
+  }
+
+  handlePage(ev: any): void {
+    this.tableData.pageNumber = ev.pageIndex + 1;
+    this.tableData.pageSize = ev.pageSize;
+    this.getAllPersons();
+  }
+
+  handleSort(ev: any): void {
+    this.currentSortBy = ev.active;
+    this.currentSortDir = ev.direction || 'asc';
+    this.tableData.pageNumber = 1;
+    this.getAllPersons();
+  }
+
+  handleSearch(q: string): void {
+    this.currentSearch = q;
+    this.tableData.pageNumber = 1;
     this.getAllPersons();
   }
 
@@ -197,14 +225,61 @@ export class PersonComponent implements OnInit {
     this.router.navigate(['/persons/delete', row.personId]);
   }
 
+  onBulkCreate(): void {
+    if (!this.canEdit) return;
+
+    const data: GenericDialogData = {
+      title: 'Bulk Create Persons',
+      mode: 'create',
+      model: { json: '[]' },
+      fields: [
+        { key: 'json', label: 'JSON Data (Array)', type: 'text' } // Use textarea if available, else text is fine for demo
+      ],
+      onSave: (dto: any) => {
+        try {
+          const persons = JSON.parse(dto.json);
+          if (!Array.isArray(persons)) throw new Error('Root must be an array');
+
+          this.tableData = { ...this.tableData, loading: true };
+          this.cdr.detectChanges();
+
+          return this.api.createBulk(persons);
+        } catch (e: any) {
+          this.toast.error('Invalid JSON: ' + e.message);
+          return throwError(() => e);
+        }
+      }
+    };
+
+    this.dialog
+      .open(GenericDialogComponent, { width: '600px', data })
+      .afterClosed()
+      .subscribe((result) => {
+        if (result) this.getAllPersons();
+      });
+  }
+
   getAllPersons(): void {
     this.tableData = { ...this.tableData, loading: true, error: '', rows: [] };
     this.cdr.detectChanges();
 
-    this.api.getAll().subscribe({
-      next: (data: any) => {
+    const request: PagedRequest = {
+      pageNumber: this.tableData.pageNumber || 1,
+      pageSize: this.tableData.pageSize || 5,
+      search: this.currentSearch,
+      sortBy: this.currentSortBy,
+      sortDirection: this.currentSortDir
+    };
+
+    this.api.getPaged(request).subscribe({
+      next: (res) => {
         this.zone.run(() => {
-          this.tableData = { ...this.tableData, rows: data ?? [], loading: false };
+          this.tableData = {
+            ...this.tableData,
+            rows: res.data ?? [],
+            totalRecords: res.totalRecords,
+            loading: false
+          };
           this.cdr.detectChanges();
         });
       },
@@ -216,6 +291,7 @@ export class PersonComponent implements OnInit {
             ...this.tableData,
             loading: false,
             rows: [],
+            totalRecords: 0,
             error: 'API call failed: ' + msg
           };
           this.cdr.detectChanges();

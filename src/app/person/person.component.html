@@ -1,9 +1,12 @@
-<div class="'page">
-  <app-tables
-    [tableData]="tableData"
-    (add)="onAddPerson()"
-    (view)="onViewPerson($event)"
-    (edit)="onEditPerson($event)"
-    (remove)="onDeletePerson($event)">
+<div class="content">
+  <div class="actions-header" *ngIf="canEdit">
+    <button mat-raised-button color="accent" (click)="onBulkCreate()">
+      Bulk Create Persons
+    </button>
+  </div>
+
+  <app-tables [tableData]="tableData" (add)="onAddPerson()" (view)="onViewPerson($event)" (edit)="onEditPerson($event)"
+    (remove)="onDeletePerson($event)" (pageChange)="handlePage($event)" (sortChange)="handleSort($event)"
+    (searchChange)="handleSearch($event)">
   </app-tables>
 </div>

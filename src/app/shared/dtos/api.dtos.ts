@@ -1,5 +1,23 @@
 // src/app/shared/api.dtos.ts
 
+// Generic Pagination DTOs
+export interface PagedRequest {
+  pageNumber: number;
+  pageSize: number;
+  search?: string;
+  role?: string;
+  status?: string;
+  sortBy?: string;
+  sortDirection?: 'asc' | 'desc';
+}
+
+export interface PagedResponse<T> {
+  data: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalRecords: number;
+}
+
 // Matches your table + controllers usage [file:53][file:52]
 export interface PersonDto {
   personId: string;
@@ -10,13 +28,13 @@ export interface PersonDto {
 
 export interface PersonCreateDto {
   name: string;
-  role: number;       
+  role: number;
   isActive?: boolean;
 }
 
 export interface PersonUpdateDto {
-  name: string;        
-  role: number;     
+  name: string;
+  role: number;
   isActive?: boolean;
 }
 
@@ -36,7 +54,7 @@ export interface ProjectDto {
 
 export interface ProjectCreateDto {
   projectName: string;
-  totalSprintCount: number;     
+  totalSprintCount: number;
   createdByAdminId: string;
 }
 
@@ -63,13 +81,13 @@ export interface TaskDto {
 }
 
 
-export interface TaskUpdateDto{
-  Status?:number;
+export interface TaskUpdateDto {
+  Status?: number;
 }
 
-export interface TaskResponseDto{
-  TaskId?:string;
+export interface TaskResponseDto {
+  TaskId?: string;
   TaskName?: string;
-  ProjectId?:string;
+  ProjectId?: string;
 }
 

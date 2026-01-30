@@ -1,17 +1,31 @@
 // src/app/shared/person-api.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE } from '../api.config';
-import { PersonCreateDto, PersonDto, PersonTeamResponseDto, PersonUpdateDto } from '../dtos/api.dtos';
+import { PagedRequest, PagedResponse, PersonCreateDto, PersonDto, PersonTeamResponseDto, PersonUpdateDto } from '../dtos/api.dtos';
+
 @Injectable({ providedIn: 'root' })
 export class PersonApiService {
   private readonly baseUrl = `${API_BASE}/Person`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getAll(): Observable<PersonDto[]> {
     return this.http.get<PersonDto[]>(this.baseUrl);
+  }
+
+  getPaged(request: PagedRequest): Observable<PagedResponse<PersonDto>> {
+    let params = new HttpParams()
+      .set('pageNumber', request.pageNumber.toString())
+      .set('pageSize', request.pageSize.toString());
+
+    if (request.search) params = params.set('search', request.search);
+    if (request.role) params = params.set('role', request.role);
+    if (request.sortBy) params = params.set('sortBy', request.sortBy);
+    if (request.sortDirection) params = params.set('sortDirection', request.sortDirection);
+
+    return this.http.get<PagedResponse<PersonDto>>(`${this.baseUrl}/paged`, { params });
   }
 
   getById(id: string): Observable<PersonDto> {
@@ -20,6 +34,10 @@ export class PersonApiService {
 
   create(dto: PersonCreateDto): Observable<PersonDto> {
     return this.http.post<PersonDto>(this.baseUrl, dto);
+  }
+
+  createBulk(dtos: PersonCreateDto[]): Observable<PersonDto[]> {
+    return this.http.post<PersonDto[]>(`${this.baseUrl}/bulk`, dtos);
   }
 
   update(id: string, dto: PersonUpdateDto): Observable<string> {

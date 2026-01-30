@@ -1,12 +1,7 @@
 <div class="tables-container">
   <div class="table-header">
     <div class="header-left">
-      <button
-        *ngIf="tableData.showAdd"
-        class="add-btn"
-        type="button"
-        (click)="onAddClick()"
-        aria-label="Add">
+      <button *ngIf="tableData.showAdd" class="add-btn" type="button" (click)="onAddClick()" aria-label="Add">
         <mat-icon>+</mat-icon>
         <span class="add-text">{{ tableData.addLabel ?? 'Add' }}</span>
       </button>
@@ -14,15 +9,11 @@
       <h3 class="table-title">{{ tableData.title ?? '' }}</h3>
     </div>
 
-    <div class="header-right" *ngIf="!tableData.loading && !tableData.error">
+    <div class="header-right">
       <mat-form-field appearance="outline" class="search-field">
         <mat-label>Search</mat-label>
-        <input
-          matInput
-          type="text"
-          placeholder="Search by any field..."
-          [(ngModel)]="searchText"
-          (ngModelChange)="applySearch()" />
+        <input matInput type="text" placeholder="Search by any field..." [(ngModel)]="searchText"
+          (ngModelChange)="onSearchChange($event)" />
       </mat-form-field>
     </div>
   </div>
@@ -30,11 +21,7 @@
   <div *ngIf="tableData.loading" class="loading">Loading...</div>
   <div *ngIf="tableData.error" class="error">{{ tableData.error }}</div>
 
-  <table
-    class="data-table"
-    mat-table
-    [dataSource]="dataSource"
-    matSort
+  <table class="data-table" mat-table [dataSource]="dataSource" matSort (matSortChange)="sortChange.emit($event)"
     *ngIf="!tableData.loading && !tableData.error">
 
     <ng-container *ngFor="let col of tableData.columns" [matColumnDef]="col.field.toString()">
@@ -43,10 +30,7 @@
       </th>
 
       <td mat-cell *matCellDef="let row">
-        <button
-          *ngIf="col.clickable; else normalCell"
-          type="button"
-          class="cell-link"
+        <button *ngIf="col.clickable; else normalCell" type="button" class="cell-link"
           (click)="onCellClick(row, col); $event.stopPropagation()">
           {{ getCellValue(row, col) }}
         </button>
@@ -61,10 +45,7 @@
       <th mat-header-cell *matHeaderCellDef>Actions</th>
 
       <td mat-cell *matCellDef="let row" class="actions" (click)="$event.stopPropagation()">
-        <button
-          type="button"
-          class="btn btn-danger"
-          (click)="remove.emit(row); $event.stopPropagation()">
+        <button type="button" class="btn btn-danger" (click)="remove.emit(row); $event.stopPropagation()">
           Delete
         </button>
       </td>
@@ -72,28 +53,19 @@
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
 
-    <tr
-      mat-row
-      *matRowDef="let row; columns: displayedColumns"
-      class="clickable-row"
-      (click)="view.emit(row)">
+    <tr mat-row *matRowDef="let row; columns: displayedColumns" class="clickable-row" (click)="view.emit(row)">
     </tr>
   </table>
 
-  <div
-    class="paginator-footer"
-    *ngIf="tableData.showPagination !== false && !tableData.loading && !tableData.error && dataSource.data.length > 0">
-    <mat-paginator
-      [pageSize]="tableData.pageSize ?? 5"
-      [pageSizeOptions]="tableData.pageSizeOptions ?? [5, 10, 20]"
-      (page)="onPaginatorChange($event)"
-      showFirstLastButtons>
+  <div class="paginator-footer"
+    *ngIf="tableData.showPagination !== false && !tableData.loading && !tableData.error && (tableData.serverSide || dataSource.data.length > 0)">
+    <mat-paginator [length]="tableData.serverSide ? tableData.totalRecords : dataSource.data.length"
+      [pageSize]="tableData.pageSize ?? 5" [pageSizeOptions]="tableData.pageSizeOptions ?? [5, 10, 20]"
+      (page)="onPaginatorChange($event)" showFirstLastButtons>
     </mat-paginator>
   </div>
 
-  <div
-    class="no-data"
-    *ngIf="!tableData.loading && !tableData.error && dataSource.data.length === 0">
+  <div class="no-data" *ngIf="!tableData.loading && !tableData.error && dataSource.data.length === 0">
     No data found.
   </div>
 </div>

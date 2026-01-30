@@ -1,10 +1,11 @@
 import { ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { throwError } from 'rxjs';
 
 import { TableData } from '../shared/table/table.component';
 import { ProjectApiService } from '../shared/services/project-api.service';
-import { ProjectCreateDto, ProjectDto, ProjectUpdateDto } from '../shared/dtos/api.dtos';
+import { PagedRequest, ProjectCreateDto, ProjectDto, ProjectUpdateDto } from '../shared/dtos/api.dtos';
 import {
   GenericDialogComponent,
   DialogField,
@@ -54,6 +55,10 @@ export class ProjectComponent implements OnInit {
     pageSize: 5,
     pageSizeOptions: [5, 10, 20],
 
+    serverSide: true,
+    totalRecords: 0,
+    pageNumber: 1,
+
     columns: [
       { header: 'ID', field: 'projectId', clickable: true, clickEvent: 'view' },
       { header: 'Project', field: 'projectName', clickable: true, clickEvent: 'view' },
@@ -71,6 +76,10 @@ export class ProjectComponent implements OnInit {
     rows: []
   };
 
+  private currentSearch = '';
+  private currentSortBy = '';
+  private currentSortDir: 'asc' | 'desc' = 'asc';
+
   constructor(
     private api: ProjectApiService,
     private zone: NgZone,
@@ -79,13 +88,32 @@ export class ProjectComponent implements OnInit {
     private dialog: MatDialog,
     private toast: ToastService,
     private auth: AuthService
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     // Hide Add button for non-admin
     this.tableData = { ...this.tableData, showAdd: this.canCreateProject };
     this.cdr.detectChanges();
 
+    this.getAllProjects();
+  }
+
+  handlePage(ev: any): void {
+    this.tableData.pageNumber = ev.pageIndex + 1;
+    this.tableData.pageSize = ev.pageSize;
+    this.getAllProjects();
+  }
+
+  handleSort(ev: any): void {
+    this.currentSortBy = ev.active;
+    this.currentSortDir = ev.direction || 'asc';
+    this.tableData.pageNumber = 1;
+    this.getAllProjects();
+  }
+
+  handleSearch(q: string): void {
+    this.currentSearch = q;
+    this.tableData.pageNumber = 1;
     this.getAllProjects();
   }
 
@@ -214,6 +242,40 @@ export class ProjectComponent implements OnInit {
     this.router.navigate(['/projects/delete', row.projectId]);
   }
 
+  onBulkCreate(): void {
+    if (!this.canCreateProject) return;
+
+    const data: GenericDialogData = {
+      title: 'Bulk Create Projects',
+      mode: 'create',
+      model: { json: '[]' },
+      fields: [
+        { key: 'json', label: 'JSON Data (Array)', type: 'text' }
+      ],
+      onSave: (dto: any) => {
+        try {
+          const projects = JSON.parse(dto.json);
+          if (!Array.isArray(projects)) throw new Error('Root must be an array');
+
+          this.tableData = { ...this.tableData, loading: true };
+          this.cdr.detectChanges();
+
+          return this.api.createBulk(projects);
+        } catch (e: any) {
+          this.toast.error('Invalid JSON: ' + e.message);
+          return throwError(() => e);
+        }
+      }
+    };
+
+    this.dialog
+      .open(GenericDialogComponent, { width: '600px', data })
+      .afterClosed()
+      .subscribe((result) => {
+        if (result) this.getAllProjects();
+      });
+  }
+
   onUpdateSprint(row: ProjectDto): void {
     if (!this.canUpdateSprint) {
       this.toast.error('Only Admin can update sprint');
@@ -263,10 +325,23 @@ export class ProjectComponent implements OnInit {
     this.tableData = { ...this.tableData, loading: true, error: '', rows: [] };
     this.cdr.detectChanges();
 
-    this.api.getAll().subscribe({
-      next: (data) => {
+    const request: PagedRequest = {
+      pageNumber: this.tableData.pageNumber || 1,
+      pageSize: this.tableData.pageSize || 5,
+      search: this.currentSearch,
+      sortBy: this.currentSortBy,
+      sortDirection: this.currentSortDir
+    };
+
+    this.api.getPaged(request).subscribe({
+      next: (res) => {
         this.zone.run(() => {
-          this.tableData = { ...this.tableData, rows: data ?? [], loading: false };
+          this.tableData = {
+            ...this.tableData,
+            rows: res.data ?? [],
+            totalRecords: res.totalRecords,
+            loading: false
+          };
           this.cdr.detectChanges();
         });
       },
@@ -278,6 +353,7 @@ export class ProjectComponent implements OnInit {
             ...this.tableData,
             loading: false,
             rows: [],
+            totalRecords: 0,
             error: 'API call failed: ' + msg
           };
           this.cdr.detectChanges();

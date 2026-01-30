@@ -10,7 +10,8 @@ import {
   OnDestroy
 } from '@angular/core';
 
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort, Sort } from '@angular/material/sort';
@@ -40,6 +41,11 @@ export interface TableData<T = any> {
   showPagination?: boolean;
   pageSize?: number;
   pageSizeOptions?: number[];
+
+  // Server-side support
+  serverSide?: boolean;
+  totalRecords?: number;
+  pageNumber?: number;
 }
 
 @Component({
@@ -57,6 +63,11 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
   @Output() sprint = new EventEmitter<T>();
   @Output() add = new EventEmitter<void>();
 
+  // Server-side events
+  @Output() pageChange = new EventEmitter<PageEvent>();
+  @Output() sortChange = new EventEmitter<Sort>();
+  @Output() searchChange = new EventEmitter<string>();
+
   // Search UI state (belongs to component, not TableData interface)
   searchText: string = '';
 
@@ -67,19 +78,37 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
   private _paginator?: MatPaginator;
 
   private sortSub?: Subscription;
+  private searchSubject = new Subject<string>();
+  private searchSub?: Subscription;
 
   private pageSizeState = 5;
+
+  constructor() {
+    this.searchSub = this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe((term) => {
+      this.searchText = term;
+      this.applySearch();
+    });
+  }
 
   @ViewChild(MatSort) set sortRef(s: MatSort | null) {
     if (!s) return;
     if (this._sort === s) return;
 
     this._sort = s;
-    this.dataSource.sort = s;
+    if (!this.tableData?.serverSide) {
+      this.dataSource.sort = s;
+    }
 
     this.sortSub?.unsubscribe();
-    this.sortSub = s.sortChange.subscribe((_ev: Sort) => {
-      this._paginator?.firstPage();
+    this.sortSub = s.sortChange.subscribe((ev: Sort) => {
+      if (this.tableData?.serverSide) {
+        this.sortChange.emit(ev);
+      } else {
+        this._paginator?.firstPage();
+      }
     });
   }
 
@@ -89,7 +118,9 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
     this._paginator = p;
 
     if (this.tableData?.showPagination !== false) {
-      this.dataSource.paginator = p;
+      if (!this.tableData?.serverSide) {
+        this.dataSource.paginator = p;
+      }
       this.initPaginatorState();
       this.applyPaginatorConfig();
     }
@@ -104,64 +135,68 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
     // Set data
     this.dataSource.data = this.tableData.rows ?? [];
 
-    // Sorting accessor (your existing logic)
-    this.dataSource.sortingDataAccessor = (row: any, columnId: string) => {
-      const col = (this.tableData.columns ?? []).find((c) => c.field.toString() === columnId);
-      if (!col) return '';
+    if (!this.tableData.serverSide) {
+      // Local Sorting accessor
+      this.dataSource.sortingDataAccessor = (row: any, columnId: string) => {
+        const col = (this.tableData.columns ?? []).find((c) => c.field.toString() === columnId);
+        if (!col) return '';
 
-      const path = (col.field ?? '').toString();
+        const path = (col.field ?? '').toString();
 
-      let value: any = path
-        ? path.split('.').reduce((acc: any, k: string) => (acc ? acc[k] : undefined), row)
-        : undefined;
+        let value: any = path
+          ? path.split('.').reduce((acc: any, k: string) => (acc ? acc[k] : undefined), row)
+          : undefined;
 
-      if (value === undefined || value === null) value = col.valueFn ? col.valueFn(row) : '';
+        if (value === undefined || value === null) value = col.valueFn ? col.valueFn(row) : '';
 
-      if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (trimmed !== '' && !Number.isNaN(Number(trimmed))) return Number(trimmed);
-        return trimmed.toLowerCase();
-      }
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          if (trimmed !== '' && !Number.isNaN(Number(trimmed))) return Number(trimmed);
+          return trimmed.toLowerCase();
+        }
 
-      return value;
-    };
+        return value;
+      };
 
-    // ✅ Search across ALL columns (Material way)
-    this.dataSource.filterPredicate = (row: any, filter: string) => {
-      const q = (filter ?? '').toString().trim().toLowerCase();
-      if (!q) return true;
+      // ✅ Local Search across ALL columns (Material way)
+      this.dataSource.filterPredicate = (row: any, filter: string) => {
+        const q = (filter ?? '').toString().trim().toLowerCase();
+        if (!q) return true;
 
-      const text = (this.tableData.columns ?? [])
-        .map((c) => {
-          const v = this.getCellValue(row, c);
-          return (v ?? '').toString().toLowerCase();
-        })
-        .join(' | ');
+        const text = (this.tableData.columns ?? [])
+          .map((c) => {
+            const v = this.getCellValue(row, c);
+            return (v ?? '').toString().toLowerCase();
+          })
+          .join(' | ');
 
-      return text.includes(q);
-    };
+        return text.includes(q);
+      };
 
-    // Re-apply search when new rows come
-    this.applySearch();
+      this.applySearch();
+    }
 
-    if (this._sort) this.dataSource.sort = this._sort;
+    if (this._sort && !this.tableData.serverSide) this.dataSource.sort = this._sort;
 
     if (this._paginator && this.tableData.showPagination !== false) {
-      this.dataSource.paginator = this._paginator;
+      if (!this.tableData.serverSide) {
+        this.dataSource.paginator = this._paginator;
+      }
       this.initPaginatorState();
       this.applyPaginatorConfig();
     }
   }
 
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void { }
 
   ngOnDestroy(): void {
     this.sortSub?.unsubscribe();
+    this.searchSub?.unsubscribe();
   }
 
   private initPaginatorState(): void {
     const incoming = this.tableData?.pageSize ?? 5;
-    if (this.pageSizeState !== incoming && this._paginator?.pageSize === 5 && incoming !== 5) {
+    if (this.pageSizeState !== incoming && (!this._paginator || this._paginator.pageSize === 5) && incoming !== 5) {
       this.pageSizeState = incoming;
     }
   }
@@ -174,6 +209,11 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
 
     this._paginator.pageSizeOptions = options;
     this._paginator.pageSize = this.pageSizeState;
+
+    if (this.tableData.serverSide && this.tableData.pageNumber !== undefined) {
+      this._paginator.pageIndex = this.tableData.pageNumber - 1;
+      this._paginator.length = this.tableData.totalRecords ?? 0;
+    }
   }
 
   onPaginatorChange(ev: PageEvent): void {
@@ -181,6 +221,9 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
 
     if (this.tableData) {
       this.tableData = { ...this.tableData, pageSize: ev.pageSize };
+      if (this.tableData.serverSide) {
+        this.pageChange.emit(ev);
+      }
     }
   }
 
@@ -194,11 +237,17 @@ export class TableComponent<T = any> implements OnChanges, AfterViewInit, OnDest
   }
 
   // Called from the search input (ngModelChange)
-  applySearch(): void {
-    this.dataSource.filter = (this.searchText ?? '').toString().trim().toLowerCase();
+  onSearchChange(term: string): void {
+    this.searchSubject.next(term);
+  }
 
-    // If paginator exists, reset to first page after filter (common UX)
-    this._paginator?.firstPage();
+  applySearch(): void {
+    if (this.tableData?.serverSide) {
+      this.searchChange.emit(this.searchText);
+    } else {
+      this.dataSource.filter = (this.searchText ?? '').toString().trim().toLowerCase();
+      this._paginator?.firstPage();
+    }
   }
 
   onCellClick(row: T, col: TableColumn<T>): void {
